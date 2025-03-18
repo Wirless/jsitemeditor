@@ -124,5 +124,19 @@
       "useable": false,
       "pickupable": false
     }
+  },
+  {
+    "id": 10,
+    "name": "Sand",
+    "sprite": {
+      "x": 61,
+      "y": 14
+    },
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    }
   }
 ]
