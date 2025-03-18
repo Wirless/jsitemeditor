@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Editor</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Game Editor</h1>
+    <nav class="main-nav">
+      <button id="itemEditorTab" class="nav-tab active">Item Editor</button>
+      <button id="mapEditorTab" class="nav-tab">Map Editor</button>
+    </nav>
+  </header>
+  
+  <div class="container">
+    <!-- Item Editor Section -->
+    <div id="itemEditorSection" class="editor-section active">
+      <div class="editor-container">
+        <div class="sprite-selector">
+          <h2>Sprite Sheet</h2>
+          <div class="sprite-sheet-container">
+            <div class="sprite-sheet-wrapper">
+              <canvas id="spriteSheetCanvas" width="800" height="600"></canvas>
+            </div>
+          </div>
+          <div class="sprite-controls">
+            <button id="zoomIn">Zoom In</button>
+            <button id="zoomOut">Zoom Out</button>
+            <span id="coordinates">X: 0, Y: 0</span>
+          </div>
+        </div>
+        
+        <div class="item-editor">
+          <h2>Item Properties</h2>
+          <div class="selected-sprite">
+            <canvas id="selectedSpriteCanvas" width="64" height="64"></canvas>
+            <p>Selected: <span id="selectedPosition">None</span></p>
+          </div>
+          
+          <div class="property-form">
+            <div class="form-group">
+              <label for="itemName">Item Name:</label>
+              <input type="text" id="itemName" placeholder="Enter item name">
+            </div>
+            
+            <div class="form-group">
+              <label for="itemId">Item ID:</label>
+              <input type="number" id="itemId" placeholder="Enter item ID">
+            </div>
+            
+            <div class="property-toggle">
+              <div class="toggle-item">
+                <input type="checkbox" id="walkable">
+                <label for="walkable">Walkable</label>
+              </div>
+              
+              <div class="toggle-item">
+                <input type="checkbox" id="blocking">
+                <label for="blocking">Blocking</label>
+              </div>
+              
+              <div class="toggle-item">
+                <input type="checkbox" id="useable">
+                <label for="useable">Useable</label>
+              </div>
+              
+              <div class="toggle-item">
+                <input type="checkbox" id="pickupable">
+                <label for="pickupable">Pickupable</label>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="actionScript">Action Script:</label>
+              <input type="text" id="actionScript" placeholder="Path to script file">
+            </div>
+            
+            <div class="form-group">
+              <label for="containerSize">Container Size:</label>
+              <input type="number" id="containerSize" placeholder="Container size (if any)">
+            </div>
+            
+            <div class="form-group">
+              <label for="floorChange">Floor Change:</label>
+              <select id="floorChange">
+                <option value="">None</option>
+                <option value="-2">-2 (Two floors down)</option>
+                <option value="-1">-1 (One floor down)</option>
+                <option value="1">1 (One floor up)</option>
+              </select>
+            </div>
+            
+            <div class="button-group">
+              <button id="addItemBtn">Add/Update Item</button>
+              <button id="clearItemBtn">Clear Form</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="items-list">
+        <h2>Items</h2>
+        <div class="list-controls">
+          <button id="downloadItemsBtn">Download Items JSON</button>
+          <button id="newItemsJsonBtn">New Items JSON</button>
+        </div>
+        <div id="itemsList" class="items-container"></div>
+      </div>
+    </div>
+    
+    <!-- Map Editor Section -->
+    <div id="mapEditorSection" class="editor-section">
+      <div class="map-controls-container">
+        <div class="map-controls">
+          <div class="form-group">
+            <label for="mapWidth">Map Width:</label>
+            <input type="number" id="mapWidth" value="20" min="5" max="100">
+          </div>
+          <div class="form-group">
+            <label for="mapHeight">Map Height:</label>
+            <input type="number" id="mapHeight" value="20" min="5" max="100">
+          </div>
+          <div class="form-group">
+            <label for="currentLayer">Layer:</label>
+            <input type="number" id="currentLayer" value="0" min="0">
+          </div>
+          <button id="createMapBtn">Create/Reset Map</button>
+          <button id="layerUpBtn">Layer Up</button>
+          <button id="layerDownBtn">Layer Down</button>
+        </div>
+        
+        <div class="map-actions">
+          <button id="saveMapBtn">Save Map</button>
+          <button id="loadMapBtn">Load Map</button>
+          <button id="downloadMapBtn">Download Map JSON</button>
+          <button id="clearMapBtn">Clear Map</button>
+        </div>
+      </div>
+      
+      <div class="map-editor-container">
+        <div class="item-palette">
+          <h3>Available Items</h3>
+          <div id="itemPalette" class="palette-container"></div>
+        </div>
+        
+        <div class="map-canvas-container">
+          <div class="map-canvas-wrapper">
+            <canvas id="mapCanvas" width="800" height="600"></canvas>
+          </div>
+        </div>
+        
+        <div class="tile-info">
+          <h3>Tile Information</h3>
+          <div class="selected-tile">
+            <p>Position: <span id="selectedTilePosition">None</span></p>
+            <p>Layer: <span id="selectedTileLayer">0</span></p>
+          </div>
+          <div id="tileItems" class="tile-items-list">
+            <p>No items on this tile</p>
+          </div>
+          <button id="removeItemBtn" disabled>Remove Selected Item</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/app.js"></script>
+</body>
+</html> 

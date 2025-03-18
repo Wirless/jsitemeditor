@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "name": "Grass",
+    "sprite": {
+      "x": 0,
+      "y": 15
+    },
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    }
+  },
+  {
+    "id": 2,
+    "name": "Sand",
+    "sprite": {
+      "x": 7,
+      "y": 15
+    },
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    }
+  },
+  {
+    "id": 3,
+    "name": "Sand",
+    "sprite": {
+      "x": 8,
+      "y": 15
+    },
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    }
+  },
+  {
+    "id": 4,
+    "name": "Sand",
+    "sprite": {
+      "x": 9,
+      "y": 15
+    },
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    }
+  },
+  {
+    "id": 5,
+    "name": "Sand",
+    "sprite": {
+      "x": 10,
+      "y": 15
+    },
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    }
+  },
+  {
+    "id": 6,
+    "name": "Sand",
+    "sprite": {
+      "x": 11,
+      "y": 15
+    },
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    }
+  },
+  {
+    "id": 7,
+    "name": "Sand",
+    "sprite": {
+      "x": 12,
+      "y": 15
+    },
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    }
+  },
+  {
+    "id": 8,
+    "name": "Sand",
+    "sprite": {
+      "x": 13,
+      "y": 15
+    },
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    }
+  },
+  {
+    "id": 9,
+    "name": "Sand",
+    "sprite": {
+      "x": 14,
+      "y": 15
+    },
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    }
+  }
+]
