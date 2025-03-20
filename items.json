@@ -138,5 +138,145 @@
       "useable": false,
       "pickupable": false
     }
+  },
+  {
+    "id": 11,
+    "name": "Stone Wall",
+    "properties": {
+      "walkable": false,
+      "blocking": true,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprites": [
+      {
+        "x": 53,
+        "y": 17
+      },
+      {
+        "x": 54,
+        "y": 17
+      },
+      {
+        "x": 55,
+        "y": 17
+      },
+      {
+        "x": 56,
+        "y": 17
+      },
+      {
+        "x": 57,
+        "y": 17
+      },
+      {
+        "x": 58,
+        "y": 17
+      },
+      {
+        "x": 59,
+        "y": 17
+      },
+      {
+        "x": 60,
+        "y": 17
+      },
+      {
+        "x": 61,
+        "y": 17
+      },
+      {
+        "x": 62,
+        "y": 17
+      },
+      {
+        "x": 63,
+        "y": 17
+      },
+      {
+        "x": 52,
+        "y": 17
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "name": "Stairs",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 5,
+      "y": 45
+    },
+    "floorChange": 1
+  },
+  {
+    "id": 13,
+    "name": "stairs",
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 4,
+      "y": 45
+    },
+    "floorChange": -1
+  },
+  {
+    "id": 14,
+    "name": "lava",
+    "properties": {
+      "walkable": false,
+      "blocking": true,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 59,
+      "y": 44
+    }
+  },
+  {
+    "id": 15,
+    "name": "Dark Rock",
+    "properties": {
+      "walkable": false,
+      "blocking": true,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprites": [
+      {
+        "x": 8,
+        "y": 13
+      },
+      {
+        "x": 9,
+        "y": 13
+      },
+      {
+        "x": 10,
+        "y": 13
+      },
+      {
+        "x": 11,
+        "y": 13
+      },
+      {
+        "x": 12,
+        "y": 13
+      },
+      {
+        "x": 13,
+        "y": 13
+      }
+    ]
   }
 ]

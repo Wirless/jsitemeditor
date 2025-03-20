@@ -10,6 +10,7 @@ body {
   color: #333;
   background-color: #f4f4f4;
   padding: 20px;
+  overflow-x: hidden;
 }
 
 header {
@@ -76,13 +77,17 @@ header {
 }
 
 .sprite-selector {
-  flex: 2;
-  min-width: 500px;
+  flex: 1;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
 }
 
 .item-editor {
   flex: 1;
-  min-width: 300px;
+  min-width: 400px;
+  max-height: 800px;
+  overflow-y: auto;
 }
 
 .items-list {
@@ -98,8 +103,9 @@ h2, h3 {
 .sprite-sheet-container {
   border: 1px solid #ddd;
   margin-bottom: 10px;
-  height: 400px;
+  height: 600px;
   position: relative;
+  flex-grow: 1;
 }
 
 .sprite-sheet-wrapper {
@@ -167,6 +173,9 @@ button:disabled:hover {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: 700px;
+  overflow-y: auto;
+  padding-right: 10px;
 }
 
 .form-group {
@@ -206,6 +215,7 @@ select {
   display: flex;
   gap: 10px;
   margin-bottom: 15px;
+  flex-wrap: wrap;
 }
 
 .items-container {
@@ -290,6 +300,14 @@ select {
   background-color: #7b1fa2;
 }
 
+#loadItemsBtn, #loadMapBtn {
+  background-color: #00BCD4;
+}
+
+#loadItemsBtn:hover, #loadMapBtn:hover {
+  background-color: #00ACC1;
+}
+
 /* Map Editor Styles */
 .map-controls-container {
   display: flex;
@@ -299,6 +317,8 @@ select {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   padding: 15px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .map-controls, .map-actions {
@@ -311,6 +331,7 @@ select {
 .map-editor-container {
   display: flex;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .item-palette {
@@ -353,21 +374,33 @@ select {
 
 .map-canvas-container {
   flex: 1;
+  min-width: 400px;
   background-color: #fff;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   padding: 15px;
+  display: flex;
+  flex-direction: column;
 }
 
 .map-canvas-wrapper {
   overflow: auto;
   height: 500px;
   border: 1px solid #ddd;
+  position: relative;
 }
 
 #mapCanvas {
   cursor: pointer;
   background-color: #f0f0f0;
+  max-width: none;
+}
+
+.map-scroll-info {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 0.9em;
+  color: #666;
 }
 
 .tile-info {
@@ -417,12 +450,72 @@ select {
   border: 1px solid #ddd;
 }
 
-#layerUpBtn, #layerDownBtn {
-  background-color: #673ab7;
+/* Sprite Variants Styles */
+.sprite-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-#layerUpBtn:hover, #layerDownBtn:hover {
-  background-color: #5e35b1;
+.sprite-variants-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border: 1px dashed #ddd;
+}
+
+.variant-sprite {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.variant-sprite:hover::after {
+  content: '×';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  background-color: #f44336;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.small-btn {
+  padding: 4px 8px;
+  font-size: 0.8em;
+}
+
+/* Erase Mode */
+.erase-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+#mapCanvas.erase-mode {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="black" stroke-width="1" fill="red" fill-opacity="0.5"/><line x1="5" y1="5" x2="15" y2="15" stroke="black" stroke-width="2"/><line x1="15" y1="5" x2="5" y2="15" stroke="black" stroke-width="2"/></svg>') 10 10, auto;
+}
+
+#layerUpBtn, #layerDownBtn {
+  background-color: #673ab7;
 }
 
 #saveMapBtn, #loadMapBtn {
@@ -431,4 +524,84 @@ select {
 
 #saveMapBtn:hover, #loadMapBtn:hover {
   background-color: #0b7dda;
+}
+
+/* Quick selection tools for sprite sheet */
+.sprite-quick-tools {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.selected-sprites-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 40px;
+  padding: 8px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  border: 1px dashed #ddd;
+}
+
+.key-shortcut {
+  display: inline-block;
+  background-color: #f1f1f1;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  margin-left: 5px;
+  border: 1px solid #ddd;
+  color: #555;
+  font-family: monospace;
+}
+
+.help-text {
+  margin-top: 5px;
+  font-size: 0.8em;
+  color: #666;
+}
+
+/* Two column layout for properties form on wider screens */
+@media (min-width: 900px) {
+  .property-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  .form-group.full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .container {
+    max-width: 100%;
+  }
+  
+  .map-editor-container {
+    flex-direction: column;
+  }
+  
+  .item-palette, .tile-info {
+    width: 100%;
+  }
+  
+  .map-canvas-container {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .editor-container {
+    flex-direction: column;
+  }
+  
+  .sprite-selector, .item-editor {
+    min-width: 100%;
+  }
 } 

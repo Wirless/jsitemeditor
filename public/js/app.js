@@ -8,6 +8,8 @@ let selectedX = -1;
 let selectedY = -1;
 let items = [];
 let currentItemIndex = -1;
+let spriteVariants = []; // Array to store multiple sprite variants
+let multiSelectMode = false; // Flag for multi-select mode
 
 // Map Editor Variables
 let mapData = {
@@ -20,6 +22,7 @@ let selectedItemId = null;
 let selectedTileX = -1;
 let selectedTileY = -1;
 let selectedTileItemIndex = -1;
+let eraseMode = false; // Flag for erase mode
 
 // DOM Elements - Item Editor
 const spriteSheetCanvas = document.getElementById('spriteSheetCanvas');
@@ -35,6 +38,7 @@ const clearItemBtn = document.getElementById('clearItemBtn');
 const downloadItemsBtn = document.getElementById('downloadItemsBtn');
 const newItemsJsonBtn = document.getElementById('newItemsJsonBtn');
 const itemsList = document.getElementById('itemsList');
+const quickVariantsContainer = document.getElementById('quickVariantsContainer');
 
 // DOM Elements - Map Editor
 const mapCanvas = document.getElementById('mapCanvas');
@@ -54,6 +58,7 @@ const selectedTilePosition = document.getElementById('selectedTilePosition');
 const selectedTileLayer = document.getElementById('selectedTileLayer');
 const tileItems = document.getElementById('tileItems');
 const removeItemBtn = document.getElementById('removeItemBtn');
+const eraseModeCheckbox = document.getElementById('eraseMode');
 
 // Tab Elements
 const itemEditorTab = document.getElementById('itemEditorTab');
@@ -71,6 +76,70 @@ const pickupableCheckbox = document.getElementById('pickupable');
 const actionScriptInput = document.getElementById('actionScript');
 const containerSizeInput = document.getElementById('containerSize');
 const floorChangeSelect = document.getElementById('floorChange');
+const attackInput = document.getElementById('attack');
+const defenseInput = document.getElementById('defense');
+const armorInput = document.getElementById('armor');
+const weightInput = document.getElementById('weight');
+const slotSelect = document.getElementById('slot');
+const spriteVariantsContainer = document.getElementById('spriteVariants');
+const addSpriteVariantBtn = document.getElementById('addSpriteVariant');
+const clearSpriteVariantsBtn = document.getElementById('clearSpriteVariants');
+
+// File input event listeners
+document.getElementById('itemsFileInput').addEventListener('change', handleItemsFileSelect);
+document.getElementById('mapFileInput').addEventListener('change', handleMapFileSelect);
+
+// Connect load buttons to file inputs
+document.getElementById('loadItemsBtn').addEventListener('click', () => {
+  document.getElementById('itemsFileInput').click();
+});
+
+document.getElementById('loadMapBtn').addEventListener('click', () => {
+  document.getElementById('mapFileInput').click();
+});
+
+// Handle items file selection
+function handleItemsFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const loadedItems = JSON.parse(e.target.result);
+      items = loadedItems;
+      renderItemsList();
+      renderItemPalette();
+      saveItems(); // Save to server
+      event.target.value = ''; // Reset file input
+    } catch (error) {
+      alert('Error loading items file: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Handle map file selection
+function handleMapFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const loadedMap = JSON.parse(e.target.result);
+      mapData = loadedMap;
+      mapWidthInput.value = mapData.width;
+      mapHeightInput.value = mapData.height;
+      drawMap();
+      saveMap(); // Save to server
+      event.target.value = ''; // Reset file input
+    } catch (error) {
+      alert('Error loading map file: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+}
 
 // Initialize the application
 function init() {
@@ -93,10 +162,13 @@ function init() {
   clearItemBtn.addEventListener('click', clearForm);
   downloadItemsBtn.addEventListener('click', downloadItemsJson);
   newItemsJsonBtn.addEventListener('click', newItemsJson);
+  addSpriteVariantBtn.addEventListener('click', addSpriteVariant);
+  clearSpriteVariantsBtn.addEventListener('click', clearSpriteVariants);
   
   // Add event listeners for Map Editor
   mapCanvas.addEventListener('mousemove', handleMapMouseMove);
   mapCanvas.addEventListener('click', handleMapClick);
+  mapCanvas.addEventListener('contextmenu', handleMapRightClick);
   createMapBtn.addEventListener('click', createOrResetMap);
   layerUpBtn.addEventListener('click', layerUp);
   layerDownBtn.addEventListener('click', layerDown);
@@ -105,6 +177,7 @@ function init() {
   downloadMapBtn.addEventListener('click', downloadMapJson);
   clearMapBtn.addEventListener('click', clearMap);
   removeItemBtn.addEventListener('click', removeSelectedTileItem);
+  eraseModeCheckbox.addEventListener('change', toggleEraseMode);
   
   // Tab switching
   itemEditorTab.addEventListener('click', () => switchTab('item'));
@@ -114,6 +187,22 @@ function init() {
   mapWidthInput.addEventListener('change', validateMapDimensions);
   mapHeightInput.addEventListener('change', validateMapDimensions);
   currentLayerInput.addEventListener('change', changeLayer);
+  
+  // Global keyboard shortcuts
+  document.addEventListener('keydown', handleKeyDown);
+  
+  // Add shift key listeners for multi-select mode
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Shift') {
+      multiSelectMode = true;
+    }
+  });
+  
+  document.addEventListener('keyup', function(e) {
+    if (e.key === 'Shift') {
+      multiSelectMode = false;
+    }
+  });
 }
 
 // ==================== ITEM EDITOR FUNCTIONS ====================
@@ -207,14 +296,23 @@ function handleSpriteClick(event) {
   const y = event.clientY - rect.top;
   
   // Calculate sprite coordinates
-  selectedX = Math.floor((x / scale + offsetX) / SPRITE_SIZE);
-  selectedY = Math.floor((y / scale + offsetY) / SPRITE_SIZE);
+  const newX = Math.floor((x / scale + offsetX) / SPRITE_SIZE);
+  const newY = Math.floor((y / scale + offsetY) / SPRITE_SIZE);
   
-  // Update the selected position display
-  selectedPositionSpan.textContent = `(${selectedX}, ${selectedY})`;
-  
-  // Draw the selected sprite in the preview
-  drawSelectedSprite();
+  // If not in multi-select mode, clear previous selection
+  if (!multiSelectMode) {
+    selectedX = newX;
+    selectedY = newY;
+    
+    // Update the selected position display
+    selectedPositionSpan.textContent = `(${selectedX}, ${selectedY})`;
+    
+    // Draw the selected sprite in the preview
+    drawSelectedSprite();
+  } else {
+    // In multi-select mode, add the sprite to variants
+    addSpriteVariantAt(newX, newY);
+  }
   
   // Redraw the sprite sheet to show the selection
   drawSpriteSheet();
@@ -262,8 +360,8 @@ function addOrUpdateItem() {
     return;
   }
   
-  if (selectedX < 0 || selectedY < 0) {
-    alert('Please select a sprite first');
+  if (selectedX < 0 || selectedY < 0 && spriteVariants.length === 0) {
+    alert('Please select a sprite first or add sprite variants');
     return;
   }
   
@@ -271,10 +369,6 @@ function addOrUpdateItem() {
   const item = {
     id: itemIdInput.value ? parseInt(itemIdInput.value) : items.length + 1,
     name: itemNameInput.value,
-    sprite: {
-      x: selectedX,
-      y: selectedY
-    },
     properties: {
       walkable: walkableCheckbox.checked,
       blocking: blockingCheckbox.checked,
@@ -282,6 +376,17 @@ function addOrUpdateItem() {
       pickupable: pickupableCheckbox.checked
     }
   };
+  
+  // Handle sprite variants
+  if (spriteVariants.length > 0) {
+    item.sprites = [...spriteVariants]; // Copy the sprites array
+  } else {
+    // Single sprite
+    item.sprite = {
+      x: selectedX,
+      y: selectedY
+    };
+  }
   
   // Add optional properties
   if (actionScriptInput.value) {
@@ -294,6 +399,27 @@ function addOrUpdateItem() {
   
   if (floorChangeSelect.value) {
     item.floorChange = parseInt(floorChangeSelect.value);
+  }
+  
+  // Add new properties
+  if (attackInput.value) {
+    item.attack = parseInt(attackInput.value);
+  }
+  
+  if (defenseInput.value) {
+    item.defense = parseInt(defenseInput.value);
+  }
+  
+  if (armorInput.value) {
+    item.armor = parseInt(armorInput.value);
+  }
+  
+  if (weightInput.value) {
+    item.weight = parseInt(weightInput.value);
+  }
+  
+  if (slotSelect.value) {
+    item.slot = slotSelect.value;
   }
   
   // Check if we're editing an existing item
@@ -321,6 +447,13 @@ function clearForm() {
   actionScriptInput.value = '';
   containerSizeInput.value = '';
   floorChangeSelect.value = '';
+  attackInput.value = '';
+  defenseInput.value = '';
+  armorInput.value = '';
+  weightInput.value = '';
+  slotSelect.value = '';
+  
+  clearSpriteVariants();
   
   currentItemIndex = -1;
   addItemBtn.textContent = 'Add Item';
@@ -347,15 +480,30 @@ function renderItemsList() {
     const spriteCtx = spriteCanvas.getContext('2d');
     
     // Draw the sprite
-    spriteCtx.drawImage(
-      spriteSheet,
-      item.sprite.x * SPRITE_SIZE,
-      item.sprite.y * SPRITE_SIZE,
-      SPRITE_SIZE,
-      SPRITE_SIZE,
-      0, 0,
-      32, 32
-    );
+    if (item.sprites && item.sprites.length > 0) {
+      // Draw the first sprite from the variants
+      const firstSprite = item.sprites[0];
+      spriteCtx.drawImage(
+        spriteSheet,
+        firstSprite.x * SPRITE_SIZE,
+        firstSprite.y * SPRITE_SIZE,
+        SPRITE_SIZE,
+        SPRITE_SIZE,
+        0, 0,
+        32, 32
+      );
+    } else if (item.sprite) {
+      // Draw the single sprite
+      spriteCtx.drawImage(
+        spriteSheet,
+        item.sprite.x * SPRITE_SIZE,
+        item.sprite.y * SPRITE_SIZE,
+        SPRITE_SIZE,
+        SPRITE_SIZE,
+        0, 0,
+        32, 32
+      );
+    }
     
     // Create the card header
     const header = document.createElement('div');
@@ -387,6 +535,31 @@ function renderItemsList() {
     
     if (item.floorChange) {
       addProperty(propertiesList, 'Floor Change', item.floorChange);
+    }
+    
+    // New properties
+    if (item.attack) {
+      addProperty(propertiesList, 'Attack', item.attack);
+    }
+    
+    if (item.defense) {
+      addProperty(propertiesList, 'Defense', item.defense);
+    }
+    
+    if (item.armor) {
+      addProperty(propertiesList, 'Armor', item.armor);
+    }
+    
+    if (item.weight) {
+      addProperty(propertiesList, 'Weight', item.weight);
+    }
+    
+    if (item.slot) {
+      addProperty(propertiesList, 'Slot', item.slot.replace('SLOT_', '').toLowerCase());
+    }
+    
+    if (item.sprites && item.sprites.length > 0) {
+      addProperty(propertiesList, 'Variants', item.sprites.length);
     }
     
     // Create action buttons
@@ -446,13 +619,30 @@ function editItem(index) {
   actionScriptInput.value = item.action || '';
   containerSizeInput.value = item.containerSize || '';
   floorChangeSelect.value = item.floorChange || '';
+  attackInput.value = item.attack || '';
+  defenseInput.value = item.defense || '';
+  armorInput.value = item.armor || '';
+  weightInput.value = item.weight || '';
+  slotSelect.value = item.slot || '';
   
-  // Set the selected sprite
-  selectedX = item.sprite.x;
-  selectedY = item.sprite.y;
-  selectedPositionSpan.textContent = `(${selectedX}, ${selectedY})`;
-  drawSelectedSprite();
-  drawSpriteSheet();
+  // Clear sprite variants
+  clearSpriteVariants();
+  
+  // Set sprite variants or single sprite
+  if (item.sprites && item.sprites.length > 0) {
+    // Add each sprite variant
+    item.sprites.forEach(sprite => {
+      spriteVariants.push({ x: sprite.x, y: sprite.y });
+    });
+    renderSpriteVariants();
+  } else if (item.sprite) {
+    // Set the selected sprite
+    selectedX = item.sprite.x;
+    selectedY = item.sprite.y;
+    selectedPositionSpan.textContent = `(${selectedX}, ${selectedY})`;
+    drawSelectedSprite();
+    drawSpriteSheet();
+  }
   
   // Update the current item index
   currentItemIndex = index;
@@ -571,15 +761,30 @@ function renderItemPalette() {
     const itemCtx = itemCanvas.getContext('2d');
     
     // Draw the sprite
-    itemCtx.drawImage(
-      spriteSheet,
-      item.sprite.x * SPRITE_SIZE,
-      item.sprite.y * SPRITE_SIZE,
-      SPRITE_SIZE,
-      SPRITE_SIZE,
-      0, 0,
-      64, 64
-    );
+    if (item.sprites && item.sprites.length > 0) {
+      // Draw the first sprite from the variants
+      const firstSprite = item.sprites[0];
+      itemCtx.drawImage(
+        spriteSheet,
+        firstSprite.x * SPRITE_SIZE,
+        firstSprite.y * SPRITE_SIZE,
+        SPRITE_SIZE,
+        SPRITE_SIZE,
+        0, 0,
+        64, 64
+      );
+    } else if (item.sprite) {
+      // Draw the single sprite
+      itemCtx.drawImage(
+        spriteSheet,
+        item.sprite.x * SPRITE_SIZE,
+        item.sprite.y * SPRITE_SIZE,
+        SPRITE_SIZE,
+        SPRITE_SIZE,
+        0, 0,
+        64, 64
+      );
+    }
     
     paletteItem.appendChild(itemCanvas);
     
@@ -610,27 +815,38 @@ function renderItemPalette() {
   });
 }
 
-// Create or reset the map with current dimensions
+// Modify createOrResetMap function to preserve tiles
 function createOrResetMap() {
   const width = parseInt(mapWidthInput.value);
   const height = parseInt(mapHeightInput.value);
   
-  if (confirm(`Are you sure you want to create a new ${width}x${height} map? This will clear any existing map data.`)) {
-    mapData = {
-      width: width,
-      height: height,
-      layers: []
-    };
+  if (confirm(`Are you sure you want to resize the map to ${width}x${height}?`)) {
+    // Store old dimensions
+    const oldWidth = mapData.width;
+    const oldHeight = mapData.height;
     
-    // Initialize with an empty layer
+    // Update dimensions
+    mapData.width = width;
+    mapData.height = height;
+    
+    // Preserve existing layers and their tiles
+    if (mapData.layers) {
+      mapData.layers.forEach(layer => {
+        if (layer) {
+          // Filter out tiles that would be outside the new dimensions
+          layer = layer.filter(tile => tile.x < width && tile.y < height);
+        }
+      });
+    }
+    
+    // Ensure at least one layer exists
+    if (!mapData.layers || mapData.layers.length === 0) {
+      mapData.layers = [[]];
+    }
+    
     currentLayer = 0;
     currentLayerInput.value = currentLayer;
-    mapData.layers[currentLayer] = [];
-    
-    // Reset selections
-    selectedTileX = -1;
-    selectedTileY = -1;
-    selectedTileItemIndex = -1;
+    selectedTileLayer.textContent = currentLayer;
     
     drawMap();
     saveMap();
@@ -643,9 +859,9 @@ function validateMapDimensions() {
   const height = parseInt(mapHeightInput.value);
   
   if (width < 5) mapWidthInput.value = 5;
-  if (width > 100) mapWidthInput.value = 100;
+  if (width > 500) mapWidthInput.value = 500;
   if (height < 5) mapHeightInput.value = 5;
-  if (height > 100) mapHeightInput.value = 100;
+  if (height > 500) mapHeightInput.value = 500;
 }
 
 // Change the current layer
@@ -730,10 +946,27 @@ function drawMap() {
       const item = items.find(i => i.id === tile.itemId);
       if (!item) return;
       
+      // Get the sprite to draw
+      let spriteX, spriteY;
+      
+      if (item.sprites && item.sprites.length > 0) {
+        // For multi-sprite items, randomly select a sprite variant
+        // We use a hash of the tile coordinates and layer to ensure consistent selection
+        const variantIndex = Math.abs((tile.x * 31 + tile.y * 17 + layer * 7) % item.sprites.length);
+        spriteX = item.sprites[variantIndex].x;
+        spriteY = item.sprites[variantIndex].y;
+      } else if (item.sprite) {
+        // Single sprite
+        spriteX = item.sprite.x;
+        spriteY = item.sprite.y;
+      } else {
+        return; // No valid sprite, skip
+      }
+      
       mapCtx.drawImage(
         spriteSheet,
-        item.sprite.x * SPRITE_SIZE,
-        item.sprite.y * SPRITE_SIZE,
+        spriteX * SPRITE_SIZE,
+        spriteY * SPRITE_SIZE,
         SPRITE_SIZE,
         SPRITE_SIZE,
         tile.x * tileSize,
@@ -747,7 +980,7 @@ function drawMap() {
   // Highlight selected tile
   if (selectedTileX >= 0 && selectedTileX < mapData.width &&
       selectedTileY >= 0 && selectedTileY < mapData.height) {
-    mapCtx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+    mapCtx.strokeStyle = eraseMode ? 'rgba(255, 0, 0, 0.8)' : 'rgba(255, 0, 0, 0.8)';
     mapCtx.lineWidth = 2;
     mapCtx.strokeRect(
       selectedTileX * tileSize,
@@ -797,8 +1030,12 @@ function handleMapClick(event) {
   // Update selected tile display
   selectedTilePosition.textContent = `(${selectedTileX}, ${selectedTileY})`;
   
+  // If we are in erase mode, remove item
+  if (eraseMode) {
+    removeItemAtTile(selectedTileX, selectedTileY, currentLayer);
+  } 
   // If we have a selected item, add it to the map
-  if (selectedItemId !== null) {
+  else if (selectedItemId !== null) {
     addItemToTile(selectedTileX, selectedTileY, currentLayer, selectedItemId);
   }
   
@@ -1037,6 +1274,259 @@ function clearMap() {
     
     drawMap();
     saveMap();
+  }
+}
+
+// Toggle erase mode
+function toggleEraseMode() {
+  eraseMode = eraseModeCheckbox.checked;
+  
+  if (eraseMode) {
+    mapCanvas.classList.add('erase-mode');
+  } else {
+    mapCanvas.classList.remove('erase-mode');
+  }
+}
+
+// Handle right click on map for erasing
+function handleMapRightClick(event) {
+  event.preventDefault(); // Prevent context menu
+  
+  const rect = mapCanvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  
+  const tileSize = 32;
+  const tileX = Math.floor(x / tileSize);
+  const tileY = Math.floor(y / tileSize);
+  
+  // Make sure the click is within the map bounds
+  if (tileX < 0 || tileX >= mapData.width || tileY < 0 || tileY >= mapData.height) {
+    return;
+  }
+  
+  // Update selected tile
+  selectedTileX = tileX;
+  selectedTileY = tileY;
+  
+  // Update selected tile display
+  selectedTilePosition.textContent = `(${selectedTileX}, ${selectedTileY})`;
+  
+  // Remove item at current layer
+  removeItemAtTile(selectedTileX, selectedTileY, currentLayer);
+  
+  // Display items on this tile
+  displayTileItems(selectedTileX, selectedTileY);
+  
+  // Redraw the map
+  drawMap();
+}
+
+// Remove an item at a specific tile and layer
+function removeItemAtTile(x, y, layer) {
+  // Ensure the layer exists
+  if (!mapData.layers[layer]) {
+    return;
+  }
+  
+  // Find items at this location
+  const itemsAtTile = mapData.layers[layer].filter(tile => 
+    tile.x === x && tile.y === y
+  );
+  
+  if (itemsAtTile.length === 0) {
+    return;
+  }
+  
+  // Remove the items by filtering
+  mapData.layers[layer] = mapData.layers[layer].filter(tile => 
+    !(tile.x === x && tile.y === y)
+  );
+  
+  // Save the map
+  saveMap();
+}
+
+// Add sprite variant at specific coordinates
+function addSpriteVariantAt(x, y) {
+  // Check if this sprite is already in the variants
+  const exists = spriteVariants.some(sprite => sprite.x === x && sprite.y === y);
+  
+  if (!exists) {
+    // Add the sprite to variants
+    spriteVariants.push({ x: x, y: y });
+    renderSpriteVariants();
+    
+    // Also update quick variants display
+    renderQuickVariants();
+  }
+}
+
+// Add sprite variant
+function addSpriteVariant() {
+  if (selectedX < 0 || selectedY < 0) {
+    alert('Please select a sprite first');
+    return;
+  }
+  
+  // Add the selected sprite to variants
+  addSpriteVariantAt(selectedX, selectedY);
+}
+
+// Clear sprite variants
+function clearSpriteVariants() {
+  spriteVariants = [];
+  renderSpriteVariants();
+  renderQuickVariants();
+}
+
+// Render sprite variants
+function renderSpriteVariants() {
+  spriteVariantsContainer.innerHTML = '';
+  
+  if (spriteVariants.length === 0) {
+    return;
+  }
+  
+  spriteVariants.forEach((sprite, index) => {
+    const variantCanvas = document.createElement('canvas');
+    variantCanvas.width = 32;
+    variantCanvas.height = 32;
+    variantCanvas.className = 'variant-sprite';
+    const variantCtx = variantCanvas.getContext('2d');
+    
+    // Draw the sprite
+    variantCtx.drawImage(
+      spriteSheet,
+      sprite.x * SPRITE_SIZE,
+      sprite.y * SPRITE_SIZE,
+      SPRITE_SIZE,
+      SPRITE_SIZE,
+      0, 0,
+      32, 32
+    );
+    
+    // Add click event to remove the variant
+    variantCanvas.addEventListener('click', () => {
+      spriteVariants.splice(index, 1);
+      renderSpriteVariants();
+      renderQuickVariants();
+    });
+    
+    spriteVariantsContainer.appendChild(variantCanvas);
+  });
+}
+
+// Render quick variants for the sprite selection area
+function renderQuickVariants() {
+  quickVariantsContainer.innerHTML = '';
+  
+  if (spriteVariants.length === 0) {
+    quickVariantsContainer.innerHTML = '<span class="help-text">No sprite variants added yet</span>';
+    return;
+  }
+  
+  spriteVariants.forEach((sprite, index) => {
+    const variantCanvas = document.createElement('canvas');
+    variantCanvas.width = 32;
+    variantCanvas.height = 32;
+    variantCanvas.className = 'variant-sprite';
+    const variantCtx = variantCanvas.getContext('2d');
+    
+    // Draw the sprite
+    variantCtx.drawImage(
+      spriteSheet,
+      sprite.x * SPRITE_SIZE,
+      sprite.y * SPRITE_SIZE,
+      SPRITE_SIZE,
+      SPRITE_SIZE,
+      0, 0,
+      32, 32
+    );
+    
+    // Add click event to remove the variant
+    variantCanvas.addEventListener('click', () => {
+      spriteVariants.splice(index, 1);
+      renderSpriteVariants();
+      renderQuickVariants();
+    });
+    
+    quickVariantsContainer.appendChild(variantCanvas);
+  });
+}
+
+// Handle keyboard shortcuts
+function handleKeyDown(e) {
+  // Only process if we're not in a text input or select
+  if (document.activeElement.tagName === 'INPUT' || 
+      document.activeElement.tagName === 'SELECT' || 
+      document.activeElement.tagName === 'TEXTAREA') {
+    return;
+  }
+  
+  // Check which tab is active
+  const isItemEditorActive = itemEditorSection.classList.contains('active');
+  const isMapEditorActive = mapEditorSection.classList.contains('active');
+  
+  if (isItemEditorActive) {
+    // Item editor shortcuts
+    switch (e.key) {
+      case 'F2':
+        e.preventDefault();
+        addSpriteVariant();
+        break;
+      case 'F3':
+        e.preventDefault();
+        clearSpriteVariants();
+        break;
+      case 's':
+        if (e.ctrlKey) {
+          e.preventDefault();
+          addOrUpdateItem();
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        clearForm();
+        break;
+      case '+':
+      case '=':
+        e.preventDefault();
+        zoomIn();
+        break;
+      case '-':
+      case '_':
+        e.preventDefault();
+        zoomOut();
+        break;
+    }
+  } else if (isMapEditorActive) {
+    // Map editor shortcuts
+    switch (e.key) {
+      case 'e':
+        e.preventDefault();
+        eraseModeCheckbox.checked = !eraseModeCheckbox.checked;
+        toggleEraseMode();
+        break;
+      case 'ArrowUp':
+        if (e.ctrlKey) {
+          e.preventDefault();
+          layerUp();
+        }
+        break;
+      case 'ArrowDown':
+        if (e.ctrlKey) {
+          e.preventDefault();
+          layerDown();
+        }
+        break;
+      case 's':
+        if (e.ctrlKey) {
+          e.preventDefault();
+          saveMap();
+        }
+        break;
+    }
   }
 }
 

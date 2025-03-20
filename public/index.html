@@ -21,24 +21,37 @@
       <div class="editor-container">
         <div class="sprite-selector">
           <h2>Sprite Sheet</h2>
+          
+          <div class="sprite-quick-tools">
+            <div class="selected-sprite">
+              <canvas id="selectedSpriteCanvas" width="64" height="64"></canvas>
+              <p>Selected: <span id="selectedPosition">None</span></p>
+            </div>
+            
+            <div>
+              <button id="addSpriteVariant" class="small-btn">Add Current Sprite <span class="key-shortcut">F2</span></button>
+              <p class="help-text">Shift+Click: Select multiple sprites</p>
+            </div>
+          </div>
+          
+          <div class="selected-sprites-container" id="quickVariantsContainer">
+            <!-- Quick variants will be added here -->
+          </div>
+          
           <div class="sprite-sheet-container">
             <div class="sprite-sheet-wrapper">
               <canvas id="spriteSheetCanvas" width="800" height="600"></canvas>
             </div>
           </div>
           <div class="sprite-controls">
-            <button id="zoomIn">Zoom In</button>
-            <button id="zoomOut">Zoom Out</button>
+            <button id="zoomIn">Zoom In <span class="key-shortcut">+</span></button>
+            <button id="zoomOut">Zoom Out <span class="key-shortcut">-</span></button>
             <span id="coordinates">X: 0, Y: 0</span>
           </div>
         </div>
         
         <div class="item-editor">
           <h2>Item Properties</h2>
-          <div class="selected-sprite">
-            <canvas id="selectedSpriteCanvas" width="64" height="64"></canvas>
-            <p>Selected: <span id="selectedPosition">None</span></p>
-          </div>
           
           <div class="property-form">
             <div class="form-group">
@@ -51,26 +64,75 @@
               <input type="number" id="itemId" placeholder="Enter item ID">
             </div>
             
-            <div class="property-toggle">
-              <div class="toggle-item">
-                <input type="checkbox" id="walkable">
-                <label for="walkable">Walkable</label>
+            <div class="form-group full-width">
+              <label for="multiSprite">Sprite Variants:</label>
+              <div class="sprite-variants">
+                <div id="spriteVariants" class="sprite-variants-list"></div>
+                <div class="button-group">
+                  <button type="button" id="clearSpriteVariants" class="small-btn">Clear Variants <span class="key-shortcut">F3</span></button>
+                </div>
               </div>
-              
-              <div class="toggle-item">
-                <input type="checkbox" id="blocking">
-                <label for="blocking">Blocking</label>
+            </div>
+            
+            <div class="form-group">
+              <label>Basic Properties:</label>
+              <div class="property-toggle">
+                <div class="toggle-item">
+                  <input type="checkbox" id="walkable">
+                  <label for="walkable">Walkable</label>
+                </div>
+                
+                <div class="toggle-item">
+                  <input type="checkbox" id="blocking">
+                  <label for="blocking">Blocking</label>
+                </div>
+                
+                <div class="toggle-item">
+                  <input type="checkbox" id="useable">
+                  <label for="useable">Useable</label>
+                </div>
+                
+                <div class="toggle-item">
+                  <input type="checkbox" id="pickupable">
+                  <label for="pickupable">Pickupable</label>
+                </div>
               </div>
-              
-              <div class="toggle-item">
-                <input type="checkbox" id="useable">
-                <label for="useable">Useable</label>
-              </div>
-              
-              <div class="toggle-item">
-                <input type="checkbox" id="pickupable">
-                <label for="pickupable">Pickupable</label>
-              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="attack">Attack:</label>
+              <input type="number" id="attack" placeholder="Attack value (if any)">
+            </div>
+            
+            <div class="form-group">
+              <label for="defense">Defense:</label>
+              <input type="number" id="defense" placeholder="Defense value (if any)">
+            </div>
+            
+            <div class="form-group">
+              <label for="armor">Armor:</label>
+              <input type="number" id="armor" placeholder="Armor value (if any)">
+            </div>
+            
+            <div class="form-group">
+              <label for="weight">Weight:</label>
+              <input type="number" id="weight" placeholder="Weight in grams (if any)">
+            </div>
+            
+            <div class="form-group">
+              <label for="slot">Equipment Slot:</label>
+              <select id="slot">
+                <option value="">None</option>
+                <option value="SLOT_NECKLACE">Necklace</option>
+                <option value="SLOT_HEAD">Head</option>
+                <option value="SLOT_BACKPACK">Backpack</option>
+                <option value="SLOT_LEFTHAND">Left Hand</option>
+                <option value="SLOT_ARMOR">Armor</option>
+                <option value="SLOT_RIGHTHAND">Right Hand</option>
+                <option value="SLOT_LEFTRING">Left Ring</option>
+                <option value="SLOT_FEET">Feet</option>
+                <option value="SLOT_RIGHTRING">Right Ring</option>
+              </select>
             </div>
             
             <div class="form-group">
@@ -93,9 +155,11 @@
               </select>
             </div>
             
-            <div class="button-group">
-              <button id="addItemBtn">Add/Update Item</button>
-              <button id="clearItemBtn">Clear Form</button>
+            <div class="form-group full-width">
+              <div class="button-group">
+                <button id="addItemBtn">Add Item <span class="key-shortcut">Ctrl+S</span></button>
+                <button id="clearItemBtn">Clear Form <span class="key-shortcut">Esc</span></button>
+              </div>
             </div>
           </div>
         </div>
@@ -105,6 +169,8 @@
         <h2>Items</h2>
         <div class="list-controls">
           <button id="downloadItemsBtn">Download Items JSON</button>
+          <button id="loadItemsBtn">Load Items JSON</button>
+          <input type="file" id="itemsFileInput" accept=".json" style="display: none;">
           <button id="newItemsJsonBtn">New Items JSON</button>
         </div>
         <div id="itemsList" class="items-container"></div>
@@ -117,11 +183,11 @@
         <div class="map-controls">
           <div class="form-group">
             <label for="mapWidth">Map Width:</label>
-            <input type="number" id="mapWidth" value="20" min="5" max="100">
+            <input type="number" id="mapWidth" value="20" min="5" max="500">
           </div>
           <div class="form-group">
             <label for="mapHeight">Map Height:</label>
-            <input type="number" id="mapHeight" value="20" min="5" max="100">
+            <input type="number" id="mapHeight" value="20" min="5" max="500">
           </div>
           <div class="form-group">
             <label for="currentLayer">Layer:</label>
@@ -135,6 +201,7 @@
         <div class="map-actions">
           <button id="saveMapBtn">Save Map</button>
           <button id="loadMapBtn">Load Map</button>
+          <input type="file" id="mapFileInput" accept=".json" style="display: none;">
           <button id="downloadMapBtn">Download Map JSON</button>
           <button id="clearMapBtn">Clear Map</button>
         </div>
@@ -149,6 +216,13 @@
         <div class="map-canvas-container">
           <div class="map-canvas-wrapper">
             <canvas id="mapCanvas" width="800" height="600"></canvas>
+          </div>
+          <div class="map-scroll-info">
+            <span>Use mouse wheel to zoom, drag to pan</span>
+          </div>
+          <div class="erase-mode-toggle">
+            <input type="checkbox" id="eraseMode">
+            <label for="eraseMode">Erase Mode (right-click to erase)</label>
           </div>
         </div>
         
