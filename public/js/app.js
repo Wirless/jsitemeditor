@@ -235,10 +235,13 @@ function init() {
   spriteSheet.src = '/tileset.png';
   spriteSheet.onload = function() {
     drawSpriteSheet();
+    drawOutfitSpriteSheet();
     // Fetch any existing items
     fetchItems();
     // Fetch any existing map
     fetchMap();
+    // Fetch any existing outfits
+    fetchOutfits();
   };
 
   // Add event listeners for Item Editor
@@ -252,6 +255,7 @@ function init() {
   newItemsJsonBtn.addEventListener('click', newItemsJson);
   addSpriteVariantBtn.addEventListener('click', addSpriteVariant);
   clearSpriteVariantsBtn.addEventListener('click', clearSpriteVariants);
+  isAnimatedCheckbox.addEventListener('change', toggleAnimationOptions);
   
   // Add event listeners for Map Editor
   mapCanvas.addEventListener('mousemove', handleMapMouseMove);
@@ -266,6 +270,32 @@ function init() {
   clearMapBtn.addEventListener('click', clearMap);
   removeItemBtn.addEventListener('click', removeSelectedTileItem);
   eraseModeCheckbox.addEventListener('change', toggleEraseMode);
+  
+  // Add event listeners for Outfit Editor
+  outfitSpriteCanvas.addEventListener('mousemove', handleOutfitMouseMove);
+  outfitSpriteCanvas.addEventListener('click', handleOutfitSpriteClick);
+  outfitZoomInBtn.addEventListener('click', outfitZoomIn);
+  outfitZoomOutBtn.addEventListener('click', outfitZoomOut);
+  selectHelmetBtn.addEventListener('click', () => startAddonSelection('helmet'));
+  selectArmorBtn.addEventListener('click', () => startAddonSelection('armor'));
+  selectPantsBtn.addEventListener('click', () => startAddonSelection('pants'));
+  selectBootsBtn.addEventListener('click', () => startAddonSelection('boots'));
+  selectLeftHandBtn.addEventListener('click', () => startAddonSelection('leftHand'));
+  selectRightHandBtn.addEventListener('click', () => startAddonSelection('rightHand'));
+  clearHelmetBtn.addEventListener('click', () => clearAddon('helmet'));
+  clearArmorBtn.addEventListener('click', () => clearAddon('armor'));
+  clearPantsBtn.addEventListener('click', () => clearAddon('pants'));
+  clearBootsBtn.addEventListener('click', () => clearAddon('boots'));
+  clearLeftHandBtn.addEventListener('click', () => clearAddon('leftHand'));
+  clearRightHandBtn.addEventListener('click', () => clearAddon('rightHand'));
+  addOutfitBtn.addEventListener('click', addOutfit);
+  updateOutfitBtn.addEventListener('click', updateOutfit);
+  clearOutfitBtn.addEventListener('click', clearOutfitForm);
+  saveOutfitBtn.addEventListener('click', saveOutfits);
+  downloadOutfitsBtn.addEventListener('click', downloadOutfitsJson);
+  loadOutfitsBtn.addEventListener('click', () => {
+    document.getElementById('outfitsFileInput').click();
+  });
   
   // Tab switching
   itemEditorTab.addEventListener('click', () => switchTab('item'));
@@ -469,6 +499,12 @@ function addOrUpdateItem() {
   // Handle sprite variants
   if (spriteVariants.length > 0) {
     item.sprites = [...spriteVariants]; // Copy the sprites array
+    
+    // Add animation settings if enabled
+    if (isAnimatedCheckbox.checked) {
+      item.animated = true;
+      item.animationSpeed = parseInt(animationSpeedInput.value) || 500;
+    }
   } else {
     // Single sprite
     item.sprite = {
@@ -541,6 +577,9 @@ function clearForm() {
   armorInput.value = '';
   weightInput.value = '';
   slotSelect.value = '';
+  isAnimatedCheckbox.checked = false;
+  animationSpeedInput.value = '500';
+  animationSpeedInput.disabled = true;
   
   clearSpriteVariants();
   
@@ -550,6 +589,12 @@ function clearForm() {
 
 // Render the items list
 function renderItemsList() {
+  // Clear any existing animation intervals
+  Object.keys(animationIntervals).forEach(key => {
+    clearInterval(animationIntervals[key]);
+    delete animationIntervals[key];
+  });
+  
   itemsList.innerHTML = '';
   
   if (items.length === 0) {
@@ -568,7 +613,35 @@ function renderItemsList() {
     spriteCanvas.className = 'item-sprite';
     const spriteCtx = spriteCanvas.getContext('2d');
     
-    // Draw the sprite
+    // Create the animation container if needed
+    let animationContainer = null;
+    if (item.animated && item.sprites && item.sprites.length > 1) {
+      animationContainer = document.createElement('div');
+      animationContainer.className = 'item-animation-preview';
+      animationContainer.appendChild(spriteCanvas);
+      
+      // Set up the animation
+      let frameIndex = 0;
+      const animationId = `item-${index}-animation`;
+      
+      animationIntervals[animationId] = setInterval(() => {
+        frameIndex = (frameIndex + 1) % item.sprites.length;
+        const sprite = item.sprites[frameIndex];
+        
+        spriteCtx.clearRect(0, 0, spriteCanvas.width, spriteCanvas.height);
+        spriteCtx.drawImage(
+          spriteSheet,
+          sprite.x * SPRITE_SIZE,
+          sprite.y * SPRITE_SIZE,
+          SPRITE_SIZE,
+          SPRITE_SIZE,
+          0, 0,
+          32, 32
+        );
+      }, item.animationSpeed || 500);
+    }
+    
+    // Draw the sprite (first frame for animations)
     if (item.sprites && item.sprites.length > 0) {
       // Draw the first sprite from the variants
       const firstSprite = item.sprites[0];
@@ -601,7 +674,11 @@ function renderItemsList() {
     const title = document.createElement('h3');
     title.textContent = `${item.name} (ID: ${item.id})`;
     
-    header.appendChild(spriteCanvas);
+    if (animationContainer) {
+      header.appendChild(animationContainer);
+    } else {
+      header.appendChild(spriteCanvas);
+    }
     header.appendChild(title);
     
     // Create properties list
@@ -649,6 +726,11 @@ function renderItemsList() {
     
     if (item.sprites && item.sprites.length > 0) {
       addProperty(propertiesList, 'Variants', item.sprites.length);
+    }
+    
+    if (item.animated) {
+      addProperty(propertiesList, 'Animated', 'Yes');
+      addProperty(propertiesList, 'Animation Speed', `${item.animationSpeed}ms`);
     }
     
     // Create action buttons
@@ -713,6 +795,9 @@ function editItem(index) {
   armorInput.value = item.armor || '';
   weightInput.value = item.weight || '';
   slotSelect.value = item.slot || '';
+  isAnimatedCheckbox.checked = item.animated || false;
+  animationSpeedInput.value = item.animationSpeed || '500';
+  animationSpeedInput.disabled = !item.animated;
   
   // Clear sprite variants
   clearSpriteVariants();
@@ -1053,11 +1138,19 @@ function drawMap() {
       let spriteX, spriteY;
       
       if (item.sprites && item.sprites.length > 0) {
-        // For multi-sprite items, randomly select a sprite variant
-        // We use a hash of the tile coordinates and layer to ensure consistent selection
-        const variantIndex = Math.abs((tile.x * 31 + tile.y * 17 + layer * 7) % item.sprites.length);
-        spriteX = item.sprites[variantIndex].x;
-        spriteY = item.sprites[variantIndex].y;
+        if (item.animated) {
+          // For animated items, we need a different approach 
+          // We'll use a hash of the tile coords + time to show different frames at different times
+          const frameIndex = Math.floor(Date.now() / (item.animationSpeed || 500)) % item.sprites.length;
+          spriteX = item.sprites[frameIndex].x;
+          spriteY = item.sprites[frameIndex].y;
+        } else {
+          // For multi-sprite items, randomly select a sprite variant
+          // We use a hash of the tile coordinates and layer to ensure consistent selection
+          const variantIndex = Math.abs((tile.x * 31 + tile.y * 17 + layer * 7) % item.sprites.length);
+          spriteX = item.sprites[variantIndex].x;
+          spriteY = item.sprites[variantIndex].y;
+        }
       } else if (item.sprite) {
         // Single sprite
         spriteX = item.sprite.x;
@@ -1091,6 +1184,11 @@ function drawMap() {
       tileSize,
       tileSize
     );
+  }
+  
+  // Request animation frame for animated items
+  if (items.some(item => item.animated)) {
+    requestAnimationFrame(drawMap);
   }
 }
 
@@ -1656,6 +1754,642 @@ function handleKeyDown(e) {
         break;
     }
   }
+}
+
+// ==================== OUTFIT EDITOR FUNCTIONS ====================
+
+// Draw the outfit sprite sheet
+function drawOutfitSpriteSheet() {
+  // Resize canvas if needed to fit sprite sheet
+  if (outfitSpriteCanvas.width < spriteSheet.width * outfitScale || 
+      outfitSpriteCanvas.height < spriteSheet.height * outfitScale) {
+    outfitSpriteCanvas.width = Math.max(400, spriteSheet.width * outfitScale);
+    outfitSpriteCanvas.height = Math.max(300, spriteSheet.height * outfitScale);
+  }
+  
+  // Clear the canvas
+  outfitSpriteCtx.clearRect(0, 0, outfitSpriteCanvas.width, outfitSpriteCanvas.height);
+  
+  // Draw the sprite sheet with the current scale and offset
+  outfitSpriteCtx.drawImage(
+    spriteSheet, 
+    outfitOffsetX, outfitOffsetY, 
+    outfitSpriteCanvas.width / outfitScale, 
+    outfitSpriteCanvas.height / outfitScale, 
+    0, 0, 
+    outfitSpriteCanvas.width, 
+    outfitSpriteCanvas.height
+  );
+  
+  // Draw the grid
+  drawOutfitGrid();
+  
+  // Highlight the selected sprite if any
+  if (selectedOutfitX >= 0 && selectedOutfitY >= 0) {
+    highlightSelectedOutfitSprite();
+  }
+}
+
+// Draw the grid overlay on the outfit sprite sheet
+function drawOutfitGrid() {
+  outfitSpriteCtx.strokeStyle = 'rgba(200, 200, 200, 0.5)';
+  outfitSpriteCtx.lineWidth = 1;
+  
+  // Calculate the starting points based on offset and scale
+  const startX = (outfitOffsetX % SPRITE_SIZE) * outfitScale;
+  const startY = (outfitOffsetY % SPRITE_SIZE) * outfitScale;
+  
+  // Draw vertical lines
+  for (let x = -startX; x < outfitSpriteCanvas.width; x += SPRITE_SIZE * outfitScale) {
+    outfitSpriteCtx.beginPath();
+    outfitSpriteCtx.moveTo(x, 0);
+    outfitSpriteCtx.lineTo(x, outfitSpriteCanvas.height);
+    outfitSpriteCtx.stroke();
+  }
+  
+  // Draw horizontal lines
+  for (let y = -startY; y < outfitSpriteCanvas.height; y += SPRITE_SIZE * outfitScale) {
+    outfitSpriteCtx.beginPath();
+    outfitSpriteCtx.moveTo(0, y);
+    outfitSpriteCtx.lineTo(outfitSpriteCanvas.width, y);
+    outfitSpriteCtx.stroke();
+  }
+}
+
+// Highlight the selected outfit sprite
+function highlightSelectedOutfitSprite() {
+  const spriteX = (selectedOutfitX * SPRITE_SIZE - outfitOffsetX) * outfitScale;
+  const spriteY = (selectedOutfitY * SPRITE_SIZE - outfitOffsetY) * outfitScale;
+  
+  outfitSpriteCtx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+  outfitSpriteCtx.lineWidth = 2;
+  outfitSpriteCtx.strokeRect(spriteX, spriteY, SPRITE_SIZE * outfitScale, SPRITE_SIZE * outfitScale);
+}
+
+// Handle mouse movement over the outfit sprite sheet
+function handleOutfitMouseMove(event) {
+  const rect = outfitSpriteCanvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  
+  // Calculate sprite coordinates
+  const spriteX = Math.floor((x / outfitScale) + outfitOffsetX) / SPRITE_SIZE;
+  const spriteY = Math.floor((y / outfitScale) + outfitOffsetY) / SPRITE_SIZE;
+  
+  // We don't need to update coordinates here since we don't have a coordinates display for outfits
+}
+
+// Handle clicking on an outfit sprite
+function handleOutfitSpriteClick(event) {
+  const rect = outfitSpriteCanvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  
+  // Calculate sprite coordinates
+  const spriteX = Math.floor((x / outfitScale + outfitOffsetX) / SPRITE_SIZE);
+  const spriteY = Math.floor((y / outfitScale + outfitOffsetY) / SPRITE_SIZE);
+  
+  if (currentAddonSelect) {
+    // If we're in addon selection mode, set the addon
+    setAddon(currentAddonSelect, spriteX, spriteY);
+    currentAddonSelect = null; // Exit addon selection mode
+  } else {
+    // Normal outfit selection
+    selectedOutfitX = spriteX;
+    selectedOutfitY = spriteY;
+    
+    // Update the selected position display
+    selectedOutfitPosition.textContent = `(${selectedOutfitX}, ${selectedOutfitY})`;
+    
+    // Redraw the preview
+    drawOutfitPreview();
+  }
+  
+  // Redraw the sprite sheet to show the selection
+  drawOutfitSpriteSheet();
+}
+
+// Outfit zoom in function
+function outfitZoomIn() {
+  if (outfitScale < 3) {
+    outfitScale += 0.25;
+    drawOutfitSpriteSheet();
+  }
+}
+
+// Outfit zoom out function
+function outfitZoomOut() {
+  if (outfitScale > 0.5) {
+    outfitScale -= 0.25;
+    drawOutfitSpriteSheet();
+  }
+}
+
+// Start the addon selection mode
+function startAddonSelection(addonType) {
+  currentAddonSelect = addonType;
+  // Highlight the outfit sprite sheet to indicate selection mode
+  outfitSpriteCanvas.style.border = '2px solid #ff9800';
+}
+
+// Set an addon at the specified coordinates
+function setAddon(addonType, x, y) {
+  outfitAddons[addonType] = { x, y };
+  
+  // Remove selection highlight
+  outfitSpriteCanvas.style.border = '1px solid #ddd';
+  
+  // Update the addon preview
+  drawAddonPreview(addonType);
+  
+  // Update the full outfit preview
+  drawOutfitPreview();
+}
+
+// Clear an addon
+function clearAddon(addonType) {
+  outfitAddons[addonType] = null;
+  
+  // Clear the addon canvas
+  const canvas = document.getElementById(`${addonType}Canvas`);
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Update the full outfit preview
+  drawOutfitPreview();
+}
+
+// Draw an addon preview
+function drawAddonPreview(addonType) {
+  const addon = outfitAddons[addonType];
+  if (!addon) return;
+  
+  const canvas = document.getElementById(`${addonType}Canvas`);
+  const ctx = canvas.getContext('2d');
+  
+  // Clear the canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw the addon sprite
+  ctx.drawImage(
+    spriteSheet,
+    addon.x * SPRITE_SIZE,
+    addon.y * SPRITE_SIZE,
+    SPRITE_SIZE,
+    SPRITE_SIZE,
+    0, 0,
+    canvas.width,
+    canvas.height
+  );
+}
+
+// Draw the full outfit preview
+function drawOutfitPreview() {
+  // Clear the canvas
+  outfitPreviewCtx.clearRect(0, 0, outfitPreviewCanvas.width, outfitPreviewCanvas.height);
+  
+  // Get the outfit type
+  const outfitType = getSelectedOutfitType();
+  
+  // Draw the base outfit if it's full or both, or if there's no selection yet
+  if (outfitType !== 'addon' || currentOutfitIndex < 0) {
+    if (selectedOutfitX >= 0 && selectedOutfitY >= 0) {
+      outfitPreviewCtx.drawImage(
+        spriteSheet,
+        selectedOutfitX * SPRITE_SIZE,
+        selectedOutfitY * SPRITE_SIZE,
+        SPRITE_SIZE,
+        SPRITE_SIZE,
+        0, 0,
+        outfitPreviewCanvas.width,
+        outfitPreviewCanvas.height
+      );
+    }
+  }
+  
+  // Draw the addons if it's addon or both, or if there's no selection yet
+  if (outfitType !== 'full' || currentOutfitIndex < 0) {
+    // Draw each addon on top of the base
+    Object.entries(outfitAddons).forEach(([type, addon]) => {
+      if (addon) {
+        outfitPreviewCtx.drawImage(
+          spriteSheet,
+          addon.x * SPRITE_SIZE,
+          addon.y * SPRITE_SIZE,
+          SPRITE_SIZE,
+          SPRITE_SIZE,
+          0, 0,
+          outfitPreviewCanvas.width,
+          outfitPreviewCanvas.height
+        );
+      }
+    });
+  }
+}
+
+// Get the selected outfit type
+function getSelectedOutfitType() {
+  for (const radio of outfitTypeRadios) {
+    if (radio.checked) {
+      return radio.value;
+    }
+  }
+  return 'full'; // Default
+}
+
+// Add a new outfit
+function addOutfit() {
+  // Validate inputs
+  if (!outfitNameInput.value) {
+    alert('Please enter an outfit name');
+    return;
+  }
+  
+  const outfitType = getSelectedOutfitType();
+  
+  if (outfitType === 'full' || outfitType === 'both') {
+    if (selectedOutfitX < 0 || selectedOutfitY < 0) {
+      alert('Please select a base outfit sprite');
+      return;
+    }
+  }
+  
+  if (outfitType === 'addon' || outfitType === 'both') {
+    const hasAddons = Object.values(outfitAddons).some(addon => addon !== null);
+    if (!hasAddons) {
+      alert('Please select at least one addon');
+      return;
+    }
+  }
+  
+  // Create the outfit object
+  const outfit = {
+    id: outfitIdInput.value ? parseInt(outfitIdInput.value) : outfits.length + 1,
+    name: outfitNameInput.value,
+    type: outfitType
+  };
+  
+  // Add base outfit if applicable
+  if (outfitType === 'full' || outfitType === 'both') {
+    outfit.baseSprite = {
+      x: selectedOutfitX,
+      y: selectedOutfitY
+    };
+  }
+  
+  // Add addons if applicable
+  if (outfitType === 'addon' || outfitType === 'both') {
+    outfit.addons = {};
+    
+    // Only include non-null addons
+    Object.entries(outfitAddons).forEach(([type, addon]) => {
+      if (addon) {
+        outfit.addons[type] = addon;
+      }
+    });
+  }
+  
+  // Add to outfits array
+  outfits.push(outfit);
+  
+  // Reset form and update UI
+  clearOutfitForm();
+  renderOutfitsList();
+  saveOutfits();
+}
+
+// Update an existing outfit
+function updateOutfit() {
+  if (currentOutfitIndex < 0) return;
+  
+  // Validate inputs
+  if (!outfitNameInput.value) {
+    alert('Please enter an outfit name');
+    return;
+  }
+  
+  const outfitType = getSelectedOutfitType();
+  
+  if (outfitType === 'full' || outfitType === 'both') {
+    if (selectedOutfitX < 0 || selectedOutfitY < 0) {
+      alert('Please select a base outfit sprite');
+      return;
+    }
+  }
+  
+  if (outfitType === 'addon' || outfitType === 'both') {
+    const hasAddons = Object.values(outfitAddons).some(addon => addon !== null);
+    if (!hasAddons) {
+      alert('Please select at least one addon');
+      return;
+    }
+  }
+  
+  // Create the outfit object
+  const outfit = {
+    id: outfits[currentOutfitIndex].id,
+    name: outfitNameInput.value,
+    type: outfitType
+  };
+  
+  // Add base outfit if applicable
+  if (outfitType === 'full' || outfitType === 'both') {
+    outfit.baseSprite = {
+      x: selectedOutfitX,
+      y: selectedOutfitY
+    };
+  }
+  
+  // Add addons if applicable
+  if (outfitType === 'addon' || outfitType === 'both') {
+    outfit.addons = {};
+    
+    // Only include non-null addons
+    Object.entries(outfitAddons).forEach(([type, addon]) => {
+      if (addon) {
+        outfit.addons[type] = addon;
+      }
+    });
+  }
+  
+  // Update the outfit
+  outfits[currentOutfitIndex] = outfit;
+  
+  // Reset form and update UI
+  clearOutfitForm();
+  renderOutfitsList();
+  saveOutfits();
+}
+
+// Clear the outfit form
+function clearOutfitForm() {
+  outfitNameInput.value = '';
+  outfitIdInput.value = '';
+  document.getElementById('typeFullOutfit').checked = true; // Reset to full outfit
+  
+  // Clear all addons
+  Object.keys(outfitAddons).forEach(type => {
+    clearAddon(type);
+  });
+  
+  // Reset selection
+  selectedOutfitX = -1;
+  selectedOutfitY = -1;
+  selectedOutfitPosition.textContent = 'None';
+  
+  // Reset UI
+  currentOutfitIndex = -1;
+  addOutfitBtn.style.display = 'block';
+  updateOutfitBtn.style.display = 'none';
+  
+  // Redraw preview
+  drawOutfitPreview();
+  drawOutfitSpriteSheet();
+}
+
+// Render the outfits list
+function renderOutfitsList() {
+  outfitsList.innerHTML = '';
+  
+  if (outfits.length === 0) {
+    outfitsList.innerHTML = '<p>No outfits created yet</p>';
+    return;
+  }
+  
+  outfits.forEach((outfit, index) => {
+    const outfitCard = document.createElement('div');
+    outfitCard.className = 'outfit-card';
+    
+    // Create the card header
+    const header = document.createElement('div');
+    header.className = 'outfit-card-header';
+    
+    // Create a canvas for the preview
+    const previewCanvas = document.createElement('canvas');
+    previewCanvas.width = 64;
+    previewCanvas.height = 64;
+    previewCanvas.className = 'outfit-sprite';
+    const previewCtx = previewCanvas.getContext('2d');
+    
+    // Draw the preview
+    if (outfit.type === 'full' || outfit.type === 'both') {
+      // Draw base outfit
+      previewCtx.drawImage(
+        spriteSheet,
+        outfit.baseSprite.x * SPRITE_SIZE,
+        outfit.baseSprite.y * SPRITE_SIZE,
+        SPRITE_SIZE,
+        SPRITE_SIZE,
+        0, 0,
+        64, 64
+      );
+    }
+    
+    if (outfit.type === 'addon' || outfit.type === 'both') {
+      // Draw addons
+      Object.values(outfit.addons).forEach(addon => {
+        previewCtx.drawImage(
+          spriteSheet,
+          addon.x * SPRITE_SIZE,
+          addon.y * SPRITE_SIZE,
+          SPRITE_SIZE,
+          SPRITE_SIZE,
+          0, 0,
+          64, 64
+        );
+      });
+    }
+    
+    const title = document.createElement('h3');
+    title.textContent = `${outfit.name} (ID: ${outfit.id})`;
+    
+    header.appendChild(previewCanvas);
+    header.appendChild(title);
+    
+    // Create the outfit info
+    const info = document.createElement('div');
+    info.className = 'outfit-info';
+    
+    const typeInfo = document.createElement('p');
+    typeInfo.textContent = `Type: ${outfit.type.charAt(0).toUpperCase() + outfit.type.slice(1)}`;
+    info.appendChild(typeInfo);
+    
+    // Create the outfit addons section if applicable
+    if (outfit.type === 'addon' || outfit.type === 'both') {
+      const addonsSection = document.createElement('div');
+      addonsSection.className = 'outfit-card-content';
+      
+      const addonsTitle = document.createElement('h4');
+      addonsTitle.textContent = 'Addons:';
+      addonsTitle.style.width = '100%';
+      addonsSection.appendChild(addonsTitle);
+      
+      // Add each addon preview
+      Object.entries(outfit.addons).forEach(([type, addon]) => {
+        const addonCanvas = document.createElement('canvas');
+        addonCanvas.width = 40;
+        addonCanvas.height = 40;
+        addonCanvas.className = 'outfit-addon';
+        const addonCtx = addonCanvas.getContext('2d');
+        
+        addonCtx.drawImage(
+          spriteSheet,
+          addon.x * SPRITE_SIZE,
+          addon.y * SPRITE_SIZE,
+          SPRITE_SIZE,
+          SPRITE_SIZE,
+          0, 0,
+          40, 40
+        );
+        
+        const addonWrapper = document.createElement('div');
+        addonWrapper.className = 'addon-wrapper';
+        
+        const addonLabel = document.createElement('div');
+        addonLabel.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+        addonLabel.style.fontSize = '0.8em';
+        addonLabel.style.textAlign = 'center';
+        
+        addonWrapper.appendChild(addonCanvas);
+        addonWrapper.appendChild(addonLabel);
+        addonsSection.appendChild(addonWrapper);
+      });
+      
+      outfitCard.appendChild(addonsSection);
+    }
+    
+    // Create action buttons
+    const actions = document.createElement('div');
+    actions.className = 'outfit-actions';
+    
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = () => editOutfit(index);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.onclick = () => deleteOutfit(index);
+    
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+    
+    // Assemble the card
+    outfitCard.appendChild(header);
+    outfitCard.appendChild(info);
+    outfitCard.appendChild(actions);
+    
+    outfitsList.appendChild(outfitCard);
+  });
+}
+
+// Edit an outfit
+function editOutfit(index) {
+  const outfit = outfits[index];
+  
+  // Set form values
+  outfitNameInput.value = outfit.name;
+  outfitIdInput.value = outfit.id;
+  
+  // Set outfit type
+  document.getElementById(`type${outfit.type.charAt(0).toUpperCase() + outfit.type.slice(1)}`).checked = true;
+  
+  // Clear all addons first
+  Object.keys(outfitAddons).forEach(type => {
+    clearAddon(type);
+  });
+  
+  // Set base outfit if applicable
+  if (outfit.type === 'full' || outfit.type === 'both') {
+    selectedOutfitX = outfit.baseSprite.x;
+    selectedOutfitY = outfit.baseSprite.y;
+    selectedOutfitPosition.textContent = `(${selectedOutfitX}, ${selectedOutfitY})`;
+  } else {
+    selectedOutfitX = -1;
+    selectedOutfitY = -1;
+    selectedOutfitPosition.textContent = 'None';
+  }
+  
+  // Set addons if applicable
+  if (outfit.type === 'addon' || outfit.type === 'both') {
+    Object.entries(outfit.addons).forEach(([type, addon]) => {
+      outfitAddons[type] = addon;
+      drawAddonPreview(type);
+    });
+  }
+  
+  // Update UI
+  currentOutfitIndex = index;
+  addOutfitBtn.style.display = 'none';
+  updateOutfitBtn.style.display = 'block';
+  
+  // Redraw preview
+  drawOutfitPreview();
+  drawOutfitSpriteSheet();
+}
+
+// Delete an outfit
+function deleteOutfit(index) {
+  if (confirm(`Are you sure you want to delete "${outfits[index].name}"?`)) {
+    outfits.splice(index, 1);
+    renderOutfitsList();
+    saveOutfits();
+  }
+}
+
+// Save outfits to the server
+function saveOutfits() {
+  fetch('/api/outfits', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(outfits)
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Outfits saved:', data);
+  })
+  .catch(error => {
+    console.error('Error saving outfits:', error);
+  });
+}
+
+// Fetch outfits from the server
+function fetchOutfits() {
+  fetch('/api/outfits')
+    .then(response => response.json())
+    .then(data => {
+      outfits = data;
+      renderOutfitsList();
+    })
+    .catch(error => {
+      console.error('Error fetching outfits:', error);
+    });
+}
+
+// Download the outfits JSON
+function downloadOutfitsJson() {
+  if (outfits.length === 0) {
+    alert('No outfits to download');
+    return;
+  }
+  
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(outfits, null, 2));
+  const downloadAnchorNode = document.createElement('a');
+  downloadAnchorNode.setAttribute("href", dataStr);
+  downloadAnchorNode.setAttribute("download", "outfits.json");
+  document.body.appendChild(downloadAnchorNode);
+  downloadAnchorNode.click();
+  downloadAnchorNode.remove();
+}
+
+// ==================== ANIMATION FUNCTIONS ====================
+
+// Toggle animation options based on checkbox
+function toggleAnimationOptions() {
+  animationSpeedInput.disabled = !isAnimatedCheckbox.checked;
 }
 
 // Start the application when the page loads
