@@ -10,9 +10,14 @@
   <header>
     <h1>Game Editor</h1>
     <nav class="main-nav">
-      <button id="itemEditorTab" class="nav-tab active">Item Editor</button>
-      <button id="mapEditorTab" class="nav-tab">Map Editor</button>
-      <button id="outfitEditorTab" class="nav-tab">Outfit Editor</button>
+      <button id="itemEditorTab" class="nav-tab active admin-only">Item Editor</button>
+      <button id="mapEditorTab" class="nav-tab admin-only">Map Editor</button>
+      <button id="outfitEditorTab" class="nav-tab admin-only">Outfit Editor</button>
+      <button id="gameClientTab" class="nav-tab">Game Client</button>
+      <div class="account-nav">
+        <span id="usernameDisplay"></span>
+        <button id="logoutBtn" class="small-btn">Logout</button>
+      </div>
     </nav>
   </header>
   
@@ -110,6 +115,31 @@
                 <div class="toggle-item">
                   <input type="checkbox" id="pickupable">
                   <label for="pickupable">Pickupable</label>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Skill Type:</label>
+              <div class="property-toggle">
+                <div class="toggle-item">
+                  <input type="radio" id="skillTypeMelee" name="skillType" value="melee">
+                  <label for="skillTypeMelee">Melee</label>
+                </div>
+                
+                <div class="toggle-item">
+                  <input type="radio" id="skillTypeDistance" name="skillType" value="distance">
+                  <label for="skillTypeDistance">Distance</label>
+                </div>
+                
+                <div class="toggle-item">
+                  <input type="radio" id="skillTypeMagic" name="skillType" value="magic">
+                  <label for="skillTypeMagic">Magic</label>
+                </div>
+                
+                <div class="toggle-item">
+                  <input type="radio" id="skillTypeNone" name="skillType" value="none" checked>
+                  <label for="skillTypeNone">None</label>
                 </div>
               </div>
             </div>
@@ -387,5 +417,42 @@
   </div>
   
   <script src="js/app.js"></script>
+  <script>
+    // Check user authentication
+    document.addEventListener('DOMContentLoaded', () => {
+      const userInfo = JSON.parse(sessionStorage.getItem('user') || '{"access":"none"}');
+      const adminOnly = document.querySelectorAll('.admin-only');
+      const usernameDisplay = document.getElementById('usernameDisplay');
+      const logoutBtn = document.getElementById('logoutBtn');
+      
+      // If not logged in, redirect to login page
+      if (!userInfo.username) {
+        window.location.href = '/login';
+        return;
+      }
+      
+      // User is logged in
+      
+      // Update username display
+      usernameDisplay.textContent = userInfo.username;
+      
+      // Check access level and show appropriate tabs
+      if (userInfo.access === 'admin' || userInfo.access === 'mod') {
+        // Show admin/mod elements
+        adminOnly.forEach(el => {
+          el.style.display = 'block';
+        });
+      } else {
+        // Regular user - redirect to game page
+        window.location.href = '/game';
+      }
+      
+      // Logout handler
+      logoutBtn.addEventListener('click', () => {
+        sessionStorage.removeItem('user');
+        window.location.href = '/login';
+      });
+    });
+  </script>
 </body>
 </html> 

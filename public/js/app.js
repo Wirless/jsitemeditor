@@ -63,6 +63,15 @@ const newItemsJsonBtn = document.getElementById('newItemsJsonBtn');
 const itemsList = document.getElementById('itemsList');
 const quickVariantsContainer = document.getElementById('quickVariantsContainer');
 
+// DOM Elements - Tab Navigation
+const itemEditorTab = document.getElementById('itemEditorTab');
+const mapEditorTab = document.getElementById('mapEditorTab');
+const outfitEditorTab = document.getElementById('outfitEditorTab');
+const gameClientTab = document.getElementById('gameClientTab');
+const itemEditorSection = document.getElementById('itemEditorSection');
+const mapEditorSection = document.getElementById('mapEditorSection');
+const outfitEditorSection = document.getElementById('outfitEditorSection');
+
 // DOM Elements - Map Editor
 const mapCanvas = document.getElementById('mapCanvas');
 const mapCtx = mapCanvas.getContext('2d');
@@ -133,14 +142,6 @@ const outfitIdInput = document.getElementById('outfitId');
 const outfitTypeRadios = document.getElementsByName('outfitType');
 const outfitsList = document.getElementById('outfitsList');
 const selectedOutfitPosition = document.getElementById('selectedOutfitPosition');
-
-// Tab Elements
-const itemEditorTab = document.getElementById('itemEditorTab');
-const mapEditorTab = document.getElementById('mapEditorTab');
-const outfitEditorTab = document.getElementById('outfitEditorTab');
-const itemEditorSection = document.getElementById('itemEditorSection');
-const mapEditorSection = document.getElementById('mapEditorSection');
-const outfitEditorSection = document.getElementById('outfitEditorSection');
 
 // Form Elements
 const itemNameInput = document.getElementById('itemName');
@@ -315,6 +316,7 @@ function init() {
   itemEditorTab.addEventListener('click', () => switchTab('item'));
   mapEditorTab.addEventListener('click', () => switchTab('map'));
   outfitEditorTab.addEventListener('click', () => switchTab('outfit'));
+  gameClientTab.addEventListener('click', () => window.location.href = '/game');
   
   // Map dimension inputs
   mapWidthInput.addEventListener('change', validateMapDimensions);
@@ -509,6 +511,17 @@ function addOrUpdateItem() {
       pickupable: pickupableCheckbox.checked
     }
   };
+  
+  // Get selected skill type
+  const skillTypeRadios = document.getElementsByName('skillType');
+  let skillType = 'none';
+  for (const radio of skillTypeRadios) {
+    if (radio.checked) {
+      skillType = radio.value;
+      break;
+    }
+  }
+  item.skillType = skillType;
   
   // Handle sprite variants
   if (spriteVariants.length > 0) {
@@ -813,6 +826,15 @@ function editItem(index) {
   animationSpeedInput.value = item.animationSpeed || '500';
   animationSpeedInput.disabled = !item.animated;
   
+  // Set skill type radio button
+  const skillType = item.skillType || 'none';
+  const skillTypeRadio = document.getElementById(`skillType${skillType.charAt(0).toUpperCase() + skillType.slice(1)}`);
+  if (skillTypeRadio) {
+    skillTypeRadio.checked = true;
+  } else {
+    document.getElementById('skillTypeNone').checked = true;
+  }
+  
   // Clear sprite variants
   clearSpriteVariants();
   
@@ -913,6 +935,7 @@ function switchTab(tab) {
     itemEditorTab.classList.add('active');
     mapEditorTab.classList.remove('active');
     outfitEditorTab.classList.remove('active');
+    gameClientTab.classList.remove('active');
     itemEditorSection.classList.add('active');
     mapEditorSection.classList.remove('active');
     outfitEditorSection.classList.remove('active');
@@ -920,16 +943,18 @@ function switchTab(tab) {
     itemEditorTab.classList.remove('active');
     mapEditorTab.classList.add('active');
     outfitEditorTab.classList.remove('active');
+    gameClientTab.classList.remove('active');
     itemEditorSection.classList.remove('active');
     mapEditorSection.classList.add('active');
     outfitEditorSection.classList.remove('active');
     
     // Refresh map canvas when switching to map tab
     drawMap();
-  } else {
+  } else if (tab === 'outfit') {
     itemEditorTab.classList.remove('active');
     mapEditorTab.classList.remove('active');
     outfitEditorTab.classList.add('active');
+    gameClientTab.classList.remove('active');
     itemEditorSection.classList.remove('active');
     mapEditorSection.classList.remove('active');
     outfitEditorSection.classList.add('active');

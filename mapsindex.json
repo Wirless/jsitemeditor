@@ -1,5 +1,5 @@
 {
-  "worldName": "Eldoria",
+  "worldName": "Torment",
   "worldVersion": "0.1.0",
   "worldSize": {
     "width": 10,
@@ -12,7 +12,7 @@
         "y": 0
       },
       "filename": "maps/sector_0_0.json",
-      "name": "Eldoria Town",
+      "name": "Torment Spawn", 
       "type": "town",
       "level": 1,
       "connections": {

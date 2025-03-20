@@ -801,4 +801,22 @@ select {
   .addon-selector {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* Account navigation */
+.account-nav {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding-right: 10px;
+}
+
+#usernameDisplay {
+  color: white;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.admin-only {
+  display: none; /* Hidden by default, shown if admin */
 } 

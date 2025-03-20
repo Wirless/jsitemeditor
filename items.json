@@ -902,5 +902,382 @@
       "x": 0,
       "y": 20
     }
+  },
+  {
+    "id": 53,
+    "name": "Stairs",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 31,
+      "y": 15
+    },
+    "floorChange": 1
+  },
+  {
+    "id": 54,
+    "name": "Stairs",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 15,
+      "y": 15
+    },
+    "floorChange": -1
+  },
+  {
+    "id": 55,
+    "name": "water border",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 11,
+      "y": 19
+    }
+  },
+  {
+    "id": 56,
+    "name": "water border",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 12,
+      "y": 19
+    }
+  },
+  {
+    "id": 57,
+    "name": "water border",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 13,
+      "y": 19
+    }
+  },
+  {
+    "id": 58,
+    "name": "water border",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 14,
+      "y": 19
+    }
+  },
+  {
+    "id": 59,
+    "name": "water border",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 15,
+      "y": 19
+    }
+  },
+  {
+    "id": 60,
+    "name": "water border",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 16,
+      "y": 19
+    }
+  },
+  {
+    "id": 61,
+    "name": "water border",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 17,
+      "y": 19
+    }
+  },
+  {
+    "id": 62,
+    "name": "water border",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprite": {
+      "x": 18,
+      "y": 19
+    }
+  },
+  {
+    "id": 63,
+    "name": "water",
+    "properties": {
+      "walkable": false,
+      "blocking": true,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprites": [
+      {
+        "x": 19,
+        "y": 19
+      },
+      {
+        "x": 20,
+        "y": 19
+      },
+      {
+        "x": 21,
+        "y": 19
+      },
+      {
+        "x": 22,
+        "y": 19
+      }
+    ],
+    "animated": true,
+    "animationSpeed": 1000
+  },
+  {
+    "id": 64,
+    "name": "stone wall",
+    "properties": {
+      "walkable": false,
+      "blocking": true,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprites": [
+      {
+        "x": 22,
+        "y": 13
+      },
+      {
+        "x": 23,
+        "y": 13
+      },
+      {
+        "x": 24,
+        "y": 13
+      },
+      {
+        "x": 25,
+        "y": 13
+      },
+      {
+        "x": 26,
+        "y": 13
+      },
+      {
+        "x": 27,
+        "y": 13
+      },
+      {
+        "x": 28,
+        "y": 13
+      }
+    ]
+  },
+  {
+    "id": 65,
+    "name": "dark rock",
+    "properties": {
+      "walkable": false,
+      "blocking": true,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprites": [
+      {
+        "x": 29,
+        "y": 13
+      },
+      {
+        "x": 30,
+        "y": 13
+      },
+      {
+        "x": 31,
+        "y": 13
+      },
+      {
+        "x": 32,
+        "y": 13
+      },
+      {
+        "x": 33,
+        "y": 13
+      },
+      {
+        "x": 34,
+        "y": 13
+      },
+      {
+        "x": 35,
+        "y": 13
+      },
+      {
+        "x": 36,
+        "y": 13
+      }
+    ]
+  },
+  {
+    "id": 66,
+    "name": "earth",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprites": [
+      {
+        "x": 37,
+        "y": 13
+      },
+      {
+        "x": 38,
+        "y": 13
+      },
+      {
+        "x": 39,
+        "y": 13
+      },
+      {
+        "x": 40,
+        "y": 13
+      }
+    ]
+  },
+  {
+    "id": 67,
+    "name": "gravel",
+    "properties": {
+      "walkable": true,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprites": [
+      {
+        "x": 41,
+        "y": 13
+      },
+      {
+        "x": 42,
+        "y": 13
+      },
+      {
+        "x": 43,
+        "y": 13
+      },
+      {
+        "x": 44,
+        "y": 13
+      }
+    ]
+  },
+  {
+    "id": 68,
+    "name": "lava rock",
+    "properties": {
+      "walkable": false,
+      "blocking": true,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprites": [
+      {
+        "x": 49,
+        "y": 13
+      },
+      {
+        "x": 50,
+        "y": 13
+      },
+      {
+        "x": 51,
+        "y": 13
+      },
+      {
+        "x": 52,
+        "y": 13
+      }
+    ]
+  },
+  {
+    "id": 69,
+    "name": "noob staff",
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": true
+    },
+    "skillType": "magic",
+    "sprite": {
+      "x": 9,
+      "y": 26
+    },
+    "attack": 5,
+    "defense": 5,
+    "weight": 200,
+    "slot": "SLOT_LEFTHAND"
+  },
+  {
+    "id": 70,
+    "name": "noob club",
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": true
+    },
+    "skillType": "melee",
+    "sprite": {
+      "x": 48,
+      "y": 27
+    },
+    "attack": 5,
+    "defense": 5,
+    "slot": "SLOT_LEFTHAND"
   }
 ]
