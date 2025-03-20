@@ -139,4 +139,80 @@ MSRE RPG is a tileset-based multiplayer role-playing game with character progres
 - Animations
 - Sound effects
 - Bug fixes
-- Performance optimization 
+- Performance optimization
+
+## Game Map Editor Extension
+
+The Game Map Editor extends the existing Map Editor functionality to handle large-scale world building through map sectors and indexing.
+
+### Features
+
+#### Map Sector Management
+- Support for infinite map size through sector-based approach
+- Each sector is a discrete JSON file (similar to existing map.json format)
+- Visual grid showing all available sectors in the world
+- Ability to navigate between sectors seamlessly in the editor
+
+#### Sector Indexing System
+- Creation of a central `mapsindex.json` file that acts as a registry for all map sectors
+- Index includes:
+  - Sector coordinates (x, y) in the global world
+  - Filename references to sector JSON files
+  - Metadata including terrain type, danger level, and region name
+  - Connection points to adjacent sectors (doors, pathways, etc.)
+
+#### Visual World Building
+- Bird's-eye view of the entire world map showing all sectors
+- Color coding for different terrain types and regions
+- Minimap for navigation between distant sectors
+- Seamless transition when working across sector boundaries
+
+#### Sector Merging Tools
+- Ability to combine multiple sector JSON files
+- Conflict resolution for overlapping elements
+- Options to stitch sectors together at specified connection points
+- Validation tools to ensure proper connectivity between sectors
+
+#### World Generation
+- Tools to procedurally generate new sectors based on templates
+- Random dungeon generation for underground sectors
+- Auto-population of appropriate monsters based on region type
+- Natural feature generation (forests, mountains, rivers)
+
+#### Performance Optimizations
+- Lazy loading of sectors based on player proximity
+- Efficient storage of sector data to minimize memory usage
+- Background loading of adjacent sectors for seamless player movement
+- Caching system for frequently accessed sectors
+
+### UI Components
+
+#### Sector Navigator
+- Grid-based overview of all world sectors
+- Ability to select and jump to any sector
+- Creation of new sectors at specific world coordinates
+
+#### Sector Properties Panel
+- Metadata editing for selected sectors
+- Assignment of region types and difficulty levels
+- Configuration of spawn rates and special features
+
+#### Connection Editor
+- Visual tools for defining connections between sectors
+- Door and portal placement
+- Seamless boundary configuration
+
+#### World Map Visualizer
+- Top-down view of the entire game world
+- Ability to zoom from full world to individual sectors
+- Overlay options for different information (monster spawns, resources, etc.)
+
+### Integration with Existing Editor
+
+The Game Map Editor will extend the current Map Editor, allowing users to:
+1. Create individual map sectors with the existing tools
+2. Zoom out to manage the world-level organization of these sectors
+3. Generate the `mapsindex.json` file automatically based on sector arrangements
+4. Test world connectivity by simulating player movement between sectors
+
+This extension will facilitate the creation of vast game worlds while maintaining manageable file sizes and optimizing performance for players. 
