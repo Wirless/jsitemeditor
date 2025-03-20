@@ -278,5 +278,51 @@
         "y": 13
       }
     ]
+  },
+  {
+    "id": 16,
+    "name": "torch",
+    "properties": {
+      "walkable": false,
+      "blocking": false,
+      "useable": false,
+      "pickupable": false
+    },
+    "sprites": [
+      {
+        "x": 14,
+        "y": 12
+      },
+      {
+        "x": 15,
+        "y": 12
+      },
+      {
+        "x": 16,
+        "y": 12
+      },
+      {
+        "x": 17,
+        "y": 12
+      },
+      {
+        "x": 18,
+        "y": 12
+      },
+      {
+        "x": 19,
+        "y": 12
+      },
+      {
+        "x": 20,
+        "y": 12
+      },
+      {
+        "x": 13,
+        "y": 12
+      }
+    ],
+    "animated": true,
+    "animationSpeed": 100
   }
 ]

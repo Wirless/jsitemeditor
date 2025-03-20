@@ -24,10 +24,12 @@ let selectedOutfitX = -1;
 let selectedOutfitY = -1;
 let currentAddonSelect = null; // Currently selecting addon
 let outfitAddons = {
+  wings: null,
   helmet: null,
   armor: null,
   pants: null,
   boots: null,
+  beard: null,
   leftHand: null,
   rightHand: null
 };
@@ -92,12 +94,16 @@ const pantsCanvas = document.getElementById('pantsCanvas');
 const bootsCanvas = document.getElementById('bootsCanvas');
 const leftHandCanvas = document.getElementById('leftHandCanvas');
 const rightHandCanvas = document.getElementById('rightHandCanvas');
+const wingsCanvas = document.getElementById('wingsCanvas');
+const beardCanvas = document.getElementById('beardCanvas');
 const helmetCtx = helmetCanvas.getContext('2d');
 const armorCtx = armorCanvas.getContext('2d');
 const pantsCtx = pantsCanvas.getContext('2d');
 const bootsCtx = bootsCanvas.getContext('2d');
 const leftHandCtx = leftHandCanvas.getContext('2d');
 const rightHandCtx = rightHandCanvas.getContext('2d');
+const wingsCtx = wingsCanvas.getContext('2d');
+const beardCtx = beardCanvas.getContext('2d');
 const outfitZoomInBtn = document.getElementById('outfitZoomIn');
 const outfitZoomOutBtn = document.getElementById('outfitZoomOut');
 const selectHelmetBtn = document.getElementById('selectHelmetBtn');
@@ -106,12 +112,16 @@ const selectPantsBtn = document.getElementById('selectPantsBtn');
 const selectBootsBtn = document.getElementById('selectBootsBtn');
 const selectLeftHandBtn = document.getElementById('selectLeftHandBtn');
 const selectRightHandBtn = document.getElementById('selectRightHandBtn');
+const selectWingsBtn = document.getElementById('selectWingsBtn');
+const selectBeardBtn = document.getElementById('selectBeardBtn');
 const clearHelmetBtn = document.getElementById('clearHelmetBtn');
 const clearArmorBtn = document.getElementById('clearArmorBtn');
 const clearPantsBtn = document.getElementById('clearPantsBtn');
 const clearBootsBtn = document.getElementById('clearBootsBtn');
 const clearLeftHandBtn = document.getElementById('clearLeftHandBtn');
 const clearRightHandBtn = document.getElementById('clearRightHandBtn');
+const clearWingsBtn = document.getElementById('clearWingsBtn');
+const clearBeardBtn = document.getElementById('clearBeardBtn');
 const addOutfitBtn = document.getElementById('addOutfitBtn');
 const updateOutfitBtn = document.getElementById('updateOutfitBtn');
 const clearOutfitBtn = document.getElementById('clearOutfitBtn');
@@ -282,12 +292,16 @@ function init() {
   selectBootsBtn.addEventListener('click', () => startAddonSelection('boots'));
   selectLeftHandBtn.addEventListener('click', () => startAddonSelection('leftHand'));
   selectRightHandBtn.addEventListener('click', () => startAddonSelection('rightHand'));
+  selectWingsBtn.addEventListener('click', () => startAddonSelection('wings'));
+  selectBeardBtn.addEventListener('click', () => startAddonSelection('beard'));
   clearHelmetBtn.addEventListener('click', () => clearAddon('helmet'));
   clearArmorBtn.addEventListener('click', () => clearAddon('armor'));
   clearPantsBtn.addEventListener('click', () => clearAddon('pants'));
   clearBootsBtn.addEventListener('click', () => clearAddon('boots'));
   clearLeftHandBtn.addEventListener('click', () => clearAddon('leftHand'));
   clearRightHandBtn.addEventListener('click', () => clearAddon('rightHand'));
+  clearWingsBtn.addEventListener('click', () => clearAddon('wings'));
+  clearBeardBtn.addEventListener('click', () => clearAddon('beard'));
   addOutfitBtn.addEventListener('click', addOutfit);
   updateOutfitBtn.addEventListener('click', updateOutfit);
   clearOutfitBtn.addEventListener('click', clearOutfitForm);
@@ -1951,6 +1965,22 @@ function drawOutfitPreview() {
   // Get the outfit type
   const outfitType = getSelectedOutfitType();
   
+  // First draw the wings if they exist (behind everything)
+  if (outfitType !== 'full' || currentOutfitIndex < 0) {
+    if (outfitAddons.wings) {
+      outfitPreviewCtx.drawImage(
+        spriteSheet,
+        outfitAddons.wings.x * SPRITE_SIZE,
+        outfitAddons.wings.y * SPRITE_SIZE,
+        SPRITE_SIZE,
+        SPRITE_SIZE,
+        0, 0,
+        outfitPreviewCanvas.width,
+        outfitPreviewCanvas.height
+      );
+    }
+  }
+  
   // Draw the base outfit if it's full or both, or if there's no selection yet
   if (outfitType !== 'addon' || currentOutfitIndex < 0) {
     if (selectedOutfitX >= 0 && selectedOutfitY >= 0) {
@@ -1967,11 +1997,12 @@ function drawOutfitPreview() {
     }
   }
   
-  // Draw the addons if it's addon or both, or if there's no selection yet
+  // Draw the remaining addons if it's addon or both, or if there's no selection yet
   if (outfitType !== 'full' || currentOutfitIndex < 0) {
-    // Draw each addon on top of the base
+    // Draw each addon on top of the base, except wings which are already drawn
     Object.entries(outfitAddons).forEach(([type, addon]) => {
-      if (addon) {
+      // Skip wings as they were already drawn behind the outfit
+      if (addon && type !== 'wings') {
         outfitPreviewCtx.drawImage(
           spriteSheet,
           addon.x * SPRITE_SIZE,
