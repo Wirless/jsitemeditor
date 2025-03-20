@@ -12,6 +12,7 @@
     <nav class="main-nav">
       <button id="itemEditorTab" class="nav-tab active">Item Editor</button>
       <button id="mapEditorTab" class="nav-tab">Map Editor</button>
+      <button id="outfitEditorTab" class="nav-tab">Outfit Editor</button>
     </nav>
   </header>
   
@@ -70,6 +71,20 @@
                 <div id="spriteVariants" class="sprite-variants-list"></div>
                 <div class="button-group">
                   <button type="button" id="clearSpriteVariants" class="small-btn">Clear Variants <span class="key-shortcut">F3</span></button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Animation Settings:</label>
+              <div class="animation-settings">
+                <div class="toggle-item">
+                  <input type="checkbox" id="isAnimated">
+                  <label for="isAnimated">Animated Item</label>
+                </div>
+                <div>
+                  <label for="animationSpeed">Animation Speed (ms):</label>
+                  <input type="number" id="animationSpeed" placeholder="Animation interval (ms)" value="500">
                 </div>
               </div>
             </div>
@@ -237,6 +252,122 @@
           </div>
           <button id="removeItemBtn" disabled>Remove Selected Item</button>
         </div>
+      </div>
+    </div>
+    
+    <!-- Outfit Editor Section -->
+    <div id="outfitEditorSection" class="editor-section">
+      <div class="outfit-controls-container">
+        <div class="outfit-controls">
+          <div class="form-group">
+            <label for="outfitName">Outfit Name:</label>
+            <input type="text" id="outfitName" placeholder="Enter outfit name">
+          </div>
+          <div class="form-group">
+            <label for="outfitId">Outfit ID:</label>
+            <input type="number" id="outfitId" placeholder="Enter outfit ID">
+          </div>
+          <div class="form-group">
+            <label>Outfit Type:</label>
+            <div class="outfit-type-toggle">
+              <div class="toggle-item">
+                <input type="radio" id="typeFullOutfit" name="outfitType" value="full" checked>
+                <label for="typeFullOutfit">Full Outfit</label>
+              </div>
+              <div class="toggle-item">
+                <input type="radio" id="typeAddon" name="outfitType" value="addon">
+                <label for="typeAddon">Addon</label>
+              </div>
+              <div class="toggle-item">
+                <input type="radio" id="typeBoth" name="outfitType" value="both">
+                <label for="typeBoth">Both</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="outfit-actions">
+          <button id="saveOutfitBtn">Save Outfit</button>
+          <button id="loadOutfitsBtn">Load Outfits</button>
+          <input type="file" id="outfitsFileInput" accept=".json" style="display: none;">
+          <button id="downloadOutfitsBtn">Download Outfits JSON</button>
+          <button id="clearOutfitBtn">Clear Outfit</button>
+        </div>
+      </div>
+      
+      <div class="outfit-editor-container">
+        <div class="outfit-sprite-selector">
+          <h3>Base Outfit</h3>
+          <div class="sprite-sheet-mini">
+            <canvas id="outfitSpriteCanvas" width="400" height="300"></canvas>
+          </div>
+          <div class="sprite-controls">
+            <button id="outfitZoomIn">Zoom In</button>
+            <button id="outfitZoomOut">Zoom Out</button>
+          </div>
+          <p>Selected Base: <span id="selectedOutfitPosition">None</span></p>
+        </div>
+        
+        <div class="addon-container">
+          <h3>Addons</h3>
+          <div class="addon-selector">
+            <div class="addon-slot">
+              <h4>Helmet (Head)</h4>
+              <canvas id="helmetCanvas" width="64" height="64"></canvas>
+              <button id="selectHelmetBtn" class="small-btn">Select</button>
+              <button id="clearHelmetBtn" class="small-btn">Clear</button>
+            </div>
+            
+            <div class="addon-slot">
+              <h4>Armor (Body)</h4>
+              <canvas id="armorCanvas" width="64" height="64"></canvas>
+              <button id="selectArmorBtn" class="small-btn">Select</button>
+              <button id="clearArmorBtn" class="small-btn">Clear</button>
+            </div>
+            
+            <div class="addon-slot">
+              <h4>Pants (Legs)</h4>
+              <canvas id="pantsCanvas" width="64" height="64"></canvas>
+              <button id="selectPantsBtn" class="small-btn">Select</button>
+              <button id="clearPantsBtn" class="small-btn">Clear</button>
+            </div>
+            
+            <div class="addon-slot">
+              <h4>Boots (Feet)</h4>
+              <canvas id="bootsCanvas" width="64" height="64"></canvas>
+              <button id="selectBootsBtn" class="small-btn">Select</button>
+              <button id="clearBootsBtn" class="small-btn">Clear</button>
+            </div>
+            
+            <div class="addon-slot">
+              <h4>Left Hand</h4>
+              <canvas id="leftHandCanvas" width="64" height="64"></canvas>
+              <button id="selectLeftHandBtn" class="small-btn">Select</button>
+              <button id="clearLeftHandBtn" class="small-btn">Clear</button>
+            </div>
+            
+            <div class="addon-slot">
+              <h4>Right Hand</h4>
+              <canvas id="rightHandCanvas" width="64" height="64"></canvas>
+              <button id="selectRightHandBtn" class="small-btn">Select</button>
+              <button id="clearRightHandBtn" class="small-btn">Clear</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="outfit-preview">
+          <h3>Outfit Preview</h3>
+          <canvas id="outfitPreviewCanvas" width="128" height="128"></canvas>
+          <div class="button-group">
+            <button id="addOutfitBtn">Add Outfit</button>
+            <button id="updateOutfitBtn" style="display: none;">Update Outfit</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="outfits-list">
+        <h3>Saved Outfits</h3>
+        <div id="outfitsList" class="items-container"></div>
       </div>
     </div>
   </div>

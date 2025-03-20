@@ -40,6 +40,31 @@ app.get('/api/items', (req, res) => {
   }
 });
 
+// API endpoint to save outfits
+app.post('/api/outfits', (req, res) => {
+  try {
+    const outfits = req.body;
+    fs.writeFileSync('outfits.json', JSON.stringify(outfits, null, 2));
+    res.json({ success: true, message: 'Outfits saved successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// API endpoint to load outfits
+app.get('/api/outfits', (req, res) => {
+  try {
+    if (fs.existsSync('outfits.json')) {
+      const outfits = JSON.parse(fs.readFileSync('outfits.json', 'utf8'));
+      res.json(outfits);
+    } else {
+      res.json([]);
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // API endpoint to save map
 app.post('/api/map', (req, res) => {
   try {

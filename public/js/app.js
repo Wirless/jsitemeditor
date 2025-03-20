@@ -11,6 +11,27 @@ let currentItemIndex = -1;
 let spriteVariants = []; // Array to store multiple sprite variants
 let multiSelectMode = false; // Flag for multi-select mode
 
+// Animation Variables
+let animationIntervals = {}; // Store animation interval IDs
+
+// Outfit Editor Variables
+let outfits = [];
+let currentOutfitIndex = -1;
+let outfitScale = 1;
+let outfitOffsetX = 0;
+let outfitOffsetY = 0;
+let selectedOutfitX = -1;
+let selectedOutfitY = -1;
+let currentAddonSelect = null; // Currently selecting addon
+let outfitAddons = {
+  helmet: null,
+  armor: null,
+  pants: null,
+  boots: null,
+  leftHand: null,
+  rightHand: null
+};
+
 // Map Editor Variables
 let mapData = {
   width: 20,
@@ -60,11 +81,56 @@ const tileItems = document.getElementById('tileItems');
 const removeItemBtn = document.getElementById('removeItemBtn');
 const eraseModeCheckbox = document.getElementById('eraseMode');
 
+// DOM Elements - Outfit Editor
+const outfitSpriteCanvas = document.getElementById('outfitSpriteCanvas');
+const outfitSpriteCtx = outfitSpriteCanvas.getContext('2d');
+const outfitPreviewCanvas = document.getElementById('outfitPreviewCanvas');
+const outfitPreviewCtx = outfitPreviewCanvas.getContext('2d');
+const helmetCanvas = document.getElementById('helmetCanvas');
+const armorCanvas = document.getElementById('armorCanvas');
+const pantsCanvas = document.getElementById('pantsCanvas');
+const bootsCanvas = document.getElementById('bootsCanvas');
+const leftHandCanvas = document.getElementById('leftHandCanvas');
+const rightHandCanvas = document.getElementById('rightHandCanvas');
+const helmetCtx = helmetCanvas.getContext('2d');
+const armorCtx = armorCanvas.getContext('2d');
+const pantsCtx = pantsCanvas.getContext('2d');
+const bootsCtx = bootsCanvas.getContext('2d');
+const leftHandCtx = leftHandCanvas.getContext('2d');
+const rightHandCtx = rightHandCanvas.getContext('2d');
+const outfitZoomInBtn = document.getElementById('outfitZoomIn');
+const outfitZoomOutBtn = document.getElementById('outfitZoomOut');
+const selectHelmetBtn = document.getElementById('selectHelmetBtn');
+const selectArmorBtn = document.getElementById('selectArmorBtn');
+const selectPantsBtn = document.getElementById('selectPantsBtn');
+const selectBootsBtn = document.getElementById('selectBootsBtn');
+const selectLeftHandBtn = document.getElementById('selectLeftHandBtn');
+const selectRightHandBtn = document.getElementById('selectRightHandBtn');
+const clearHelmetBtn = document.getElementById('clearHelmetBtn');
+const clearArmorBtn = document.getElementById('clearArmorBtn');
+const clearPantsBtn = document.getElementById('clearPantsBtn');
+const clearBootsBtn = document.getElementById('clearBootsBtn');
+const clearLeftHandBtn = document.getElementById('clearLeftHandBtn');
+const clearRightHandBtn = document.getElementById('clearRightHandBtn');
+const addOutfitBtn = document.getElementById('addOutfitBtn');
+const updateOutfitBtn = document.getElementById('updateOutfitBtn');
+const clearOutfitBtn = document.getElementById('clearOutfitBtn');
+const saveOutfitBtn = document.getElementById('saveOutfitBtn');
+const downloadOutfitsBtn = document.getElementById('downloadOutfitsBtn');
+const loadOutfitsBtn = document.getElementById('loadOutfitsBtn');
+const outfitNameInput = document.getElementById('outfitName');
+const outfitIdInput = document.getElementById('outfitId');
+const outfitTypeRadios = document.getElementsByName('outfitType');
+const outfitsList = document.getElementById('outfitsList');
+const selectedOutfitPosition = document.getElementById('selectedOutfitPosition');
+
 // Tab Elements
 const itemEditorTab = document.getElementById('itemEditorTab');
 const mapEditorTab = document.getElementById('mapEditorTab');
+const outfitEditorTab = document.getElementById('outfitEditorTab');
 const itemEditorSection = document.getElementById('itemEditorSection');
 const mapEditorSection = document.getElementById('mapEditorSection');
+const outfitEditorSection = document.getElementById('outfitEditorSection');
 
 // Form Elements
 const itemNameInput = document.getElementById('itemName');
@@ -84,10 +150,13 @@ const slotSelect = document.getElementById('slot');
 const spriteVariantsContainer = document.getElementById('spriteVariants');
 const addSpriteVariantBtn = document.getElementById('addSpriteVariant');
 const clearSpriteVariantsBtn = document.getElementById('clearSpriteVariants');
+const isAnimatedCheckbox = document.getElementById('isAnimated');
+const animationSpeedInput = document.getElementById('animationSpeed');
 
 // File input event listeners
 document.getElementById('itemsFileInput').addEventListener('change', handleItemsFileSelect);
 document.getElementById('mapFileInput').addEventListener('change', handleMapFileSelect);
+document.getElementById('outfitsFileInput').addEventListener('change', handleOutfitsFileSelect);
 
 // Connect load buttons to file inputs
 document.getElementById('loadItemsBtn').addEventListener('click', () => {
@@ -141,6 +210,25 @@ function handleMapFileSelect(event) {
   reader.readAsText(file);
 }
 
+// Handle outfits file selection
+function handleOutfitsFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const loadedOutfits = JSON.parse(e.target.result);
+      outfits = loadedOutfits;
+      renderOutfitsList();
+      event.target.value = ''; // Reset file input
+    } catch (error) {
+      alert('Error loading outfits file: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
 // Initialize the application
 function init() {
   // Load the sprite sheet
@@ -182,6 +270,7 @@ function init() {
   // Tab switching
   itemEditorTab.addEventListener('click', () => switchTab('item'));
   mapEditorTab.addEventListener('click', () => switchTab('map'));
+  outfitEditorTab.addEventListener('click', () => switchTab('outfit'));
   
   // Map dimension inputs
   mapWidthInput.addEventListener('change', validateMapDimensions);
@@ -724,16 +813,30 @@ function switchTab(tab) {
   if (tab === 'item') {
     itemEditorTab.classList.add('active');
     mapEditorTab.classList.remove('active');
+    outfitEditorTab.classList.remove('active');
     itemEditorSection.classList.add('active');
     mapEditorSection.classList.remove('active');
-  } else {
+    outfitEditorSection.classList.remove('active');
+  } else if (tab === 'map') {
     itemEditorTab.classList.remove('active');
     mapEditorTab.classList.add('active');
+    outfitEditorTab.classList.remove('active');
     itemEditorSection.classList.remove('active');
     mapEditorSection.classList.add('active');
+    outfitEditorSection.classList.remove('active');
     
     // Refresh map canvas when switching to map tab
     drawMap();
+  } else {
+    itemEditorTab.classList.remove('active');
+    mapEditorTab.classList.remove('active');
+    outfitEditorTab.classList.add('active');
+    itemEditorSection.classList.remove('active');
+    mapEditorSection.classList.remove('active');
+    outfitEditorSection.classList.add('active');
+    
+    // Refresh outfit editor when switching to outfit tab
+    drawOutfitPreview();
   }
 }
 
@@ -1467,6 +1570,7 @@ function handleKeyDown(e) {
   // Check which tab is active
   const isItemEditorActive = itemEditorSection.classList.contains('active');
   const isMapEditorActive = mapEditorSection.classList.contains('active');
+  const isOutfitEditorActive = outfitEditorSection.classList.contains('active');
   
   if (isItemEditorActive) {
     // Item editor shortcuts
@@ -1525,6 +1629,30 @@ function handleKeyDown(e) {
           e.preventDefault();
           saveMap();
         }
+        break;
+    }
+  } else if (isOutfitEditorActive) {
+    // Outfit editor shortcuts
+    switch (e.key) {
+      case '+':
+      case '=':
+        e.preventDefault();
+        outfitZoomIn();
+        break;
+      case '-':
+      case '_':
+        e.preventDefault();
+        outfitZoomOut();
+        break;
+      case 's':
+        if (e.ctrlKey) {
+          e.preventDefault();
+          saveOutfit();
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        clearOutfitForm();
         break;
     }
   }
