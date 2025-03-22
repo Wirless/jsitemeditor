@@ -2,6 +2,12 @@
 
 A web-based sprite sheet editor for game items and maps. This tool allows you to select sprites from a tileset, create JSON item definitions with various properties, and build maps using those items for your Java game.
 
+
+![Alt text](https://i.imgur.com/ZkrMSwg.png)
+
+
+
+
 ## Features
 
 ### Item Editor
